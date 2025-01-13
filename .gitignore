@@ -39,3 +39,7 @@ cvibuild.*
 # Specific project files
 *LOG/
 *DATA/
+*EVENTS/
+
+# Misc
+*.pdf
