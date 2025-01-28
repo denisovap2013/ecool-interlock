@@ -13,7 +13,7 @@ void releaseSchedule(void) {
 	globalSchedule.numberOfRecords = 0;	
 }
 
-int addRecordToSchedule(int active,int immediate, unsigned int timeInterval, void (*func)(int)) {
+int addRecordToSchedule(int active,int immediate, unsigned int timeInterval, void (*func)(int, int), char *name, int arg1) {
 	int i;
 	if (globalSchedule.numberOfRecords >= MAX_RECORDS_NUMBER) return -1;
 	if (!func) return -1;
@@ -21,7 +21,9 @@ int addRecordToSchedule(int active,int immediate, unsigned int timeInterval, voi
 	i = globalSchedule.numberOfRecords;
 	globalSchedule.numberOfRecords++;
 	globalSchedule.records[i].func = func;
+	globalSchedule.records[i].arg1 = arg1; 
 	globalSchedule.records[i].timeInterval = timeInterval;
+	strcpy(globalSchedule.records[i].name, name); 
 	
 	if (active) {
 		activateScheduleRecord(i,immediate);
@@ -77,7 +79,7 @@ void processScheduleEvents(void) {
 	for (i=0; i<globalSchedule.numberOfRecords; i++) {
 		if (globalSchedule.records[i].active) {
 			if ( (current_time - globalSchedule.records[i].timeActivated) >= globalSchedule.records[i].timeInterval) {
-				globalSchedule.records[i].func(i);
+				globalSchedule.records[i].func(i, globalSchedule.records[i].arg1);
 				globalSchedule.records[i].timeActivated = current_time;
 			}
 		}

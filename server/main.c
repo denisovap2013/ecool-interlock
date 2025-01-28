@@ -29,12 +29,12 @@ tcpConnection_ServerInterface_t tcpSI;
 ///////////////////////////////////////// 
 
 /////////////////////////////////////////   SCHEDULE FUNCTIONS
-void ubsBlockReconnection(int handle);
-void ubsBlockReadData(int handle);
+void ubsBlockReconnection(int handle, int arg1);
+void ubsBlockReadData(int handle, int arg1);
+void ubsBlockReadLogInfo(int handle, int arg1);
 
-
-void adcFileWrite(int handle);
-void deleteOldFiles(int handle);
+void adcFileWrite(int handle, int arg1);
+void deleteOldFiles(int handle, int arg1);
 /////////////////////////////////////////
 
 /////////////////////////////////////////   CONFIGURATION FUNCTIONS 
@@ -106,7 +106,7 @@ void bgdFunc(void)
 }
 
 
-void ubsBlockReconnection(int handle) {
+void ubsBlockReconnection(int handle, int arg1) {
 	if (!modbusBlockData.connectionInfo.connected) {
 		ConnectToUbsBlock(UBS_CONNECTION_IP, UBS_CONNECTION_PORT, UBS_CONNECTION_TIMEOUT, &modbusBlockData);
 		
@@ -117,21 +117,21 @@ void ubsBlockReconnection(int handle) {
 }
 
 
-void ubsBlockReadData(int handle) {
+void ubsBlockReadData(int handle, int arg1) {
 	if (modbusBlockData.connectionInfo.connected) {
 		requestUbsData(modbusBlockData.connectionInfo.conversationHandle);
 	}
 }
 
 
-void ubsBlockReadLogInfo(int handle) {
+void ubsBlockReadLogInfo(int handle, int arg1) {
 	if (modbusBlockData.connectionInfo.connected && !modbusBlockData.logInfo.currentlyReading) {
 		requestLogState(modbusBlockData.connectionInfo.conversationHandle);
 	}
 }
 
 
-void adcFileWrite(int handle) {
+void adcFileWrite(int handle, int arg1) {
 	char buffer[3000];
 
 	if (modbusBlockData.connectionInfo.connected) {
@@ -141,17 +141,18 @@ void adcFileWrite(int handle) {
 }
 
 
-void deleteOldFiles(int handle) {
+void deleteOldFiles(int handle, int arg1) {
 	DeleteOldFiles(FILE_LOG_DIRECTORY, FILE_DATA_DIRECTORY, FILE_EVENTS_DIRECTORY, FILE_EXPIRATION);
 }
 
 
 void prepareTimeSchedule(void) {
-	addRecordToSchedule(1, 1, UBS_RECONNECTION_DELAY, ubsBlockReconnection);
-	addRecordToSchedule(1, 0, UBS_DATA_REQUEST_INTERVAL, ubsBlockReadData);
-	addRecordToSchedule(1, 0, UBS_LOG_STATE_REQUEST_INTERVAL, ubsBlockReadLogInfo);  // COMMENT THIS IF SMTH GOES WRONG WITH LOGGING    
-	addRecordToSchedule(1, 0, FILE_DATA_WRITE_INTERVAL, adcFileWrite);  
-	addRecordToSchedule(1, 1, 60 * 60 * 24, deleteOldFiles);     
+	addRecordToSchedule(1, 1, UBS_RECONNECTION_DELAY, ubsBlockReconnection, "reconnection", 0);
+	addRecordToSchedule(1, 0, UBS_DATA_REQUEST_INTERVAL, ubsBlockReadData, "data request", 0);
+	// COMMENT THIS IF SMTH GOES WRONG WITH LOGGING  
+	addRecordToSchedule(1, 0, UBS_LOG_STATE_REQUEST_INTERVAL, ubsBlockReadLogInfo, "state request", 0);  
+	addRecordToSchedule(1, 0, FILE_DATA_WRITE_INTERVAL, adcFileWrite, "file write", 0);  
+	addRecordToSchedule(1, 1, 60 * 60 * 24, deleteOldFiles, "delete old files", 0);     
 }
 
 
