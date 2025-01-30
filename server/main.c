@@ -38,7 +38,7 @@ void deleteOldFiles(int handle, int arg1);
 /////////////////////////////////////////
 
 /////////////////////////////////////////   CONFIGURATION FUNCTIONS 
-void prepareTimeSchedule(void); 
+int prepareTimeSchedule(void); 
 
 
 void DiscardAllResources(void);
@@ -146,13 +146,38 @@ void deleteOldFiles(int handle, int arg1) {
 }
 
 
-void prepareTimeSchedule(void) {
-	addRecordToSchedule(1, 1, UBS_RECONNECTION_DELAY, ubsBlockReconnection, "reconnection", 0);
-	addRecordToSchedule(1, 0, UBS_DATA_REQUEST_INTERVAL, ubsBlockReadData, "data request", 0);
-	// COMMENT THIS IF SMTH GOES WRONG WITH LOGGING  
-	addRecordToSchedule(1, 0, UBS_LOG_STATE_REQUEST_INTERVAL, ubsBlockReadLogInfo, "state request", 0);  
-	addRecordToSchedule(1, 0, FILE_DATA_WRITE_INTERVAL, adcFileWrite, "file write", 0);  
-	addRecordToSchedule(1, 1, 60 * 60 * 24, deleteOldFiles, "delete old files", 0);     
+int prepareTimeSchedule(void) {
+	// Send reconnection request
+	if (addRecordToSchedule(1, 1, UBS_RECONNECTION_DELAY, ubsBlockReconnection, "reconnection", 0) < 0) {
+		msAddMsg(msGMS(), "[ERROR] Unable to add reconnection event.");
+		return -1;	
+	}
+
+	// Send data request
+	if (addRecordToSchedule(1, 0, UBS_DATA_REQUEST_INTERVAL, ubsBlockReadData, "data request", 0) < 0) {
+		msAddMsg(msGMS(), "[ERROR] Unable to add data update event.");
+		return -1;	
+	}
+
+	// Send log info request
+	if (addRecordToSchedule(1, 0, UBS_LOG_STATE_REQUEST_INTERVAL, ubsBlockReadLogInfo, "log info request", 0) < 0) {
+		msAddMsg(msGMS(), "[ERROR] Unable to add status update event.");
+		return -1;	
+	}
+
+	// COMMENT THE FOLLOWING IF SMTH GOES WRONG WITH LOGGING  
+	// Send status request
+	if (addRecordToSchedule(1, 0, FILE_DATA_WRITE_INTERVAL, adcFileWrite, "file write", 0) < 0) {
+		msAddMsg(msGMS(), "[ERROR] Unable to add status update event.");
+		return -1;	
+	}
+
+	// Send status request
+	if (addRecordToSchedule(1, 1, 60 * 60 * 24, deleteOldFiles, "delete old files", 0) < 0) {
+		msAddMsg(msGMS(), "[ERROR] Unable to add status update event");
+		return -1;	
+	}
+	return 0;
 }
 
 
@@ -234,8 +259,14 @@ int main() {
 	
 	msInitGlobalStack();  // Initialize the global message stack 
 	msAddMsg(msGMS(),"---------------------------\n[UBS Server -- NEW SESSION]\n---------------------------");   
-	
-	prepareTimeSchedule();
+
+	if (prepareTimeSchedule() < 0) {
+		msAddMsg(msGMS(), "[ERROR] Unable to schedule all necessary events.");
+		WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY); 
+		msFlushMsgs(msGMS());
+		MessagePopup("Internal error", "Unable to schedule events for interacting with devices. See the log file for more details.");
+		return 0;
+	}
 
 	// Prepare a TCP server for communication with high-end clients. 
 	tcpConnection_InitServerInterface(&tcpSI);
