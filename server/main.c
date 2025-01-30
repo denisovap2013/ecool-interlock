@@ -77,7 +77,7 @@ int CVICALLBACK userMainCallback(int MenuBarHandle, int MenuItemID, int event, v
 						return 1;
 					} else
 					{
-						msAddMsg(msGMS(),"%s [SERVER] Closing the application.",TimeStamp(0));
+						logMessage("[SERVER] Closing the application.");
 						WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
 						DiscardAllResources();
 					}
@@ -85,7 +85,7 @@ int CVICALLBACK userMainCallback(int MenuBarHandle, int MenuItemID, int event, v
 					break;
 				case SYSTEM_CLOSE:
 					// Shutting down the system
-						msAddMsg(msGMS(),"%s [SERVER] The computer is shutting down! Closing the application.", TimeStamp(0));
+						logMessage("[SERVER] The computer is shutting down! Closing the application.");
 						WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
 						DiscardAllResources(); 
 						MessagePopup("Shutting down the system","The server will be closed now.");
@@ -111,7 +111,7 @@ void ubsBlockReconnection(int handle, int arg1) {
 		ConnectToUbsBlock(UBS_CONNECTION_IP, UBS_CONNECTION_PORT, UBS_CONNECTION_TIMEOUT, &modbusBlockData);
 		
 		if (!modbusBlockData.connectionInfo.connected) {
-			msAddMsg(msGMS(),"%s [MODBUS-UBS] Next connection request will be in %d seconds.",TimeStamp(0), UBS_RECONNECTION_DELAY);  
+			logMessage("[MODBUS-UBS] Next connection request will be in %d seconds.", UBS_RECONNECTION_DELAY);  
 		}
 	}
 }
@@ -204,7 +204,7 @@ void dataExchFunc(unsigned handle,void * arg)
 	byteRecv = ServerTCPRead(handle, command, MAX_RECEIVED_BYTES - 1, 0);
 	if ( byteRecv <= 0 )
 	{
-		msAddMsg(msGMS(),"%s [SERVER CLIENT] Error occured while receiving messages from the client >> %s", TimeStamp(0), GetTCPSystemErrorString());
+		logMessage("[SERVER CLIENT] Error occured while receiving messages from the client >> %s", GetTCPSystemErrorString());
 		return;
 	}
 
@@ -233,7 +233,7 @@ void dataExchFunc(unsigned handle,void * arg)
 	}
 	
 	if (ServerTCPWrite(handle, answer, strlen(answer), 100) < 0) {
-		msAddMsg(msGMS(),"%s [SERVER CLIENT] Error occured while sending a message to the client >> %s", TimeStamp(0), GetTCPSystemErrorString());
+		logMessage("[SERVER CLIENT] Error occured while sending a message to the client >> %s", GetTCPSystemErrorString());
 	}
 }
 

@@ -151,17 +151,17 @@ void ConnectToUbsBlock(char * ip,unsigned int port, unsigned int timeout, void *
 	modbus_block_data_t *pModbusBlockData;
 	
 	pModbusBlockData = (modbus_block_data_t *)callbackData;
-	msAddMsg(msGMS(),"%s [MODBUS-UBS] Connecting to the UBS block (%s:%d)...", TimeStamp(0), ip, port);
+	logMessage("[MODBUS-UBS] Connecting to the UBS block (%s:%d)...", ip, port);
 	res = ConnectToTCPServer(&pModbusBlockData->connectionInfo.conversationHandle, port, ip, ModbusUbsClientCallback, callbackData, timeout);
 	
 	if (res)
 	{
 		pModbusBlockData->connectionInfo.connected = 0;
-		msAddMsg(msGMS(),"%s [MODBUS-UBS] Error! Connection to the UBS block failed.",TimeStamp(0));
+		logMessage("[MODBUS-UBS] Error! Connection to the UBS block failed.");
 	}
 	else {
 		pModbusBlockData->connectionInfo.connected = 1;
-		msAddMsg(msGMS(),"%s [MODBUS-UBS] Connection to the UBS block is established.",TimeStamp(0));
+		logMessage("[MODBUS-UBS] Connection to the UBS block is established.");
 	}
 	
 	return;
@@ -173,8 +173,8 @@ void SetDisconnectedStatus(modbus_connection_info_t * modbusConnectionInfo) {
 
 	modbusConnectionInfo->connected = 0;
 	modbusConnectionInfo->conversationHandle = 0;
-	msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Disconnected from the UBS block.",TimeStamp(0));
-	msAddMsg(msGMS(),"%s [MODBUS-UBS] Next connection request will be within %d seconds.",TimeStamp(0), UBS_RECONNECTION_DELAY);
+	logMessage("[MODBUS-UBS]: Error! Disconnected from the UBS block.");
+	logMessage("[MODBUS-UBS] Next connection request will be within %d seconds.", UBS_RECONNECTION_DELAY);
 }
 
 
@@ -187,7 +187,7 @@ void ResetLogReadingStatus(ubs_log_info_t * ubsLogInfo) {
 
 int SetLogReadingStatus(ubs_log_info_t * ubsLogInfo) {
 	if (ubsLogInfo->currentlyReading) {
-		msAddMsg(msGMS(), "%s [CODE] Trying to initiate log pages reading twice,", TimeStamp(0));
+		logMessage("[CODE] Trying to initiate log pages reading for a second time.");
 		return 0;
 	}
 
@@ -202,7 +202,7 @@ int SetLogReadingStatus(ubs_log_info_t * ubsLogInfo) {
 		ubsLogInfo->numberOfPagesToRead = ubsLogInfo->logState.endAddress / ubsLogInfo->logState.pageSize;	
 	}
 	
-	msAddMsg(msGMS(), "%s [MODBUS-UBS] States of the registry blocks changed. %d page(s) are available.", TimeStamp(0), ubsLogInfo->numberOfPagesToRead);
+	logMessage("[MODBUS-UBS] States of the registry blocks changed. %d page(s) are available.", ubsLogInfo->numberOfPagesToRead);
 	
 	return 1;
 }
@@ -228,7 +228,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 		case TCP_DATAREADY:
 			// Read header
 			if (ClientTCPRead(handle, messageHeader, 7, UBS_CONNECTION_READ_TIMEOUT) <= 0) {
-				msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Unable to read data header from UBS over Modbus-TCP (yet it is available): %s", TimeStamp(0), GetTCPSystemErrorString());
+				logMessage("[MODBUS-UBS]: Error! Unable to read data header from UBS over Modbus-TCP (yet it is available): %s", GetTCPSystemErrorString());
 
 				DisconnectFromTCPServer(handle);
 				SetDisconnectedStatus(&pModbusBlockData->connectionInfo);
@@ -239,7 +239,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 				
 				// Read the rest of the message (minus one byte from the header's tail)
 				if ( (msgBodySize = ClientTCPRead(handle, messageBody, bytes_number - 1, UBS_CONNECTION_READ_TIMEOUT)) < 0) {
-					msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Unable to read data body from UBS over Modbus-TCP (yet it is available): %s", TimeStamp(0), GetTCPSystemErrorString());
+					logMessage("[MODBUS-UBS]: Error! Unable to read data body from UBS over Modbus-TCP (yet it is available): %s", GetTCPSystemErrorString());
 					
 					DisconnectFromTCPServer(handle);
 					SetDisconnectedStatus(&pModbusBlockData->connectionInfo);
@@ -250,7 +250,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 					functionID = messageBody[0];
 					if (functionID & (1 << 7)) {
 						// Error occured
-						msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Modbus block returned the error code %d (0x%02X): %s", TimeStamp(0), functionID, functionID, getTransactionName(transactionID));
+						logMessage("[MODBUS-UBS]: Error! Modbus block returned the error code %d (0x%02X): %s", functionID, functionID, getTransactionName(transactionID));
 						break;
 					}
 					
@@ -274,7 +274,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 						
 						if (logPage.err) {
 							ResetLogReadingStatus(&pModbusBlockData->logInfo);  
-							msAddMsg(msGMS(), "%s [MODBUS-UBS]: Error! Unable to parse the log page data.", TimeStamp(0));
+							logMessage("[MODBUS-UBS]: Error! Unable to parse the log page data.");
 
 						} else {
 							pModbusBlockData->logInfo.logDataPages[pModbusBlockData->logInfo.currentPageIndex++] = logPage;
@@ -291,7 +291,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 						// TODO maybe do something
 						
 					} else {
-						msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Recieved the message with unknown transaction ID (0x%04X)", TimeStamp(0), transactionID);	
+						logMessage("[MODBUS-UBS]: Error! Recieved the message with unknown transaction ID (0x%04X)", transactionID);	
 					}
 					
 					//switch
@@ -307,7 +307,7 @@ double adcRawToVoltage_mV(unsigned short channelType, unsigned short rawValue) {
 	double voltage_mv;
 
 	if (channelType < 0 || channelType > 9) {
-		msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Recieved the unsupported channel type (%d)", TimeStamp(0), channelType);
+		logMessage("[MODBUS-UBS]: Error! Recieved the unsupported channel type (%d)", channelType);
 		
 		if (channelType < 0) channelType = 0; else channelType = 9;  // clamp value
 	}
@@ -471,7 +471,7 @@ void requestUbsData(unsigned int conversationHandle) {
 	requestBody[5] = getBigEndianWord(81);							 	// Word defining the number of words to read from the UBS module
 	
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
-		msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Unable to send the data read request to the UBS module: %s", TimeStamp(0), GetTCPSystemErrorString());	
+		logMessage("[MODBUS-UBS]: Error! Unable to send the data read request to the UBS module: %s", GetTCPSystemErrorString());	
 	}
 }
 
@@ -487,7 +487,7 @@ void requestLogState(unsigned int conversationHandle) {
 	requestBody[5] = getBigEndianWord(4);							 	// Word defining the number of words to read from the UBS module
 	
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
-		msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Unable to send the log state read request to the UBS module: %s", TimeStamp(0), GetTCPSystemErrorString());	
+		logMessage("[MODBUS-UBS]: Error! Unable to send the log state read request to the UBS module: %s", GetTCPSystemErrorString());	
 	}	
 }
 
@@ -508,7 +508,7 @@ void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * 
 	requestBody[5] = getBigEndianWord(logInfo->logState.pageSize);	 			// Word defining the number of words to read from the UBS module
 	
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
-		msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Unable to send the log pages read request to the UBS module: %s", TimeStamp(0), GetTCPSystemErrorString());	
+		logMessage("[MODBUS-UBS]: Error! Unable to send the log pages read request to the UBS module: %s", GetTCPSystemErrorString());	
 	}	
 }
 
@@ -538,11 +538,11 @@ int requestUbsLogReset(unsigned int conversationHandle) {
 	requestBody[16] = 0;
 	
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) < 0) {
-		msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Unable to send the log reset command to the UBS module: %s", TimeStamp(0), GetTCPSystemErrorString());
+		logMessage("[MODBUS-UBS]: Error! Unable to send the log reset command to the UBS module: %s", GetTCPSystemErrorString());
 		return 0;
 	}
 	
-	msAddMsg(msGMS(), "%s [MODBUS-UBS] Sent the request to reset the log state.", TimeStamp(0));
+	logMessage("[MODBUS-UBS] Sent the request to reset the log state.");
 	
 	return 1;
 }
@@ -607,7 +607,7 @@ int writeUbsDAC(unsigned int conversationHandle, unsigned int dacIndex, unsigned
 	requestBody[14] = dacVoltageCode & 0xFF;
 	
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) < 0) {
-		msAddMsg(msGMS(),"%s [MODBUS-UBS]: Error! Unable to send the DAC setup request to the UBS module: %s", TimeStamp(0), GetTCPSystemErrorString());
+		logMessage("[MODBUS-UBS]: Error! Unable to send the DAC setup request to the UBS module: %s", GetTCPSystemErrorString());
 		return 0;
 	}	
 	
@@ -802,7 +802,7 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, char *outputBuf
 		);
 		
 		if (scanRes != 15) {
-			msAddMsg(msGMS(),"%s [EVENTS]: Error! Unable to parse the events record (missing time markers): \"%s\"", TimeStamp(0), eventsRecords[i]);  
+			logMessage("[EVENTS]: Error! Unable to parse the events record (missing time markers): \"%s\"", eventsRecords[i]);  
 			return 0;
 		}
 		
@@ -811,7 +811,7 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, char *outputBuf
 		// Check that the rest of the record contains the necessary data
 		for (j=0; j<DI_NUMBER; j++) {
 			if (sscanf(stringPos, "%X%n", &intBuff, &auxPos) != 1) {
-				msAddMsg(msGMS(),"%s [EVENTS]: Error! Unable to parse the events record (missing state of DI-%d): \"%s\"", TimeStamp(0), j, eventsRecords[i]);  
+				logMessage("[EVENTS]: Error! Unable to parse the events record (missing state of DI-%d): \"%s\"", j, eventsRecords[i]);  
 				return 0;		
 			}
 			stringPos += auxPos;
@@ -819,7 +819,7 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, char *outputBuf
 		
 		for (j=0; j<DQ_NUMBER; j++) {
 			if (sscanf(stringPos, "%X%n", &intBuff, &auxPos) != 1) {
-				msAddMsg(msGMS(),"%s [EVENTS]: Error! Unable to parse the events record (missing state of DQ-%d): \"%s\"", TimeStamp(0), j, eventsRecords[i]);  
+				logMessage("[EVENTS]: Error! Unable to parse the events record (missing state of DQ-%d): \"%s\"", j, eventsRecords[i]);  
 				return 0;		
 			}
 			stringPos += auxPos;
