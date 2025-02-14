@@ -17,7 +17,6 @@
 #include "Logging.h"
 #include "ClientCommands.h"
 
-#define configFile "ecool-interlock-server-config.ini"
 #define MAX_RECEIVED_BYTES 3000
 
 // Variables
@@ -101,7 +100,7 @@ void bgdFunc(void)
 {
 	processScheduleEvents();
 	WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
-	msPrintMsgs(msGMS(),stdout);
+	msPrintMsgs(msGMS(), stdout);
 	msFlushMsgs(msGMS());
 }
 
@@ -245,59 +244,71 @@ void dataExchFunc(unsigned handle,void * arg)
 //===================================================================
 ///////////////////////////////////////////////////////////////////// 
 
-int main() {
-	/////////////////////////////////
-	// Body of the program
-	/////////////////////////////////
-	InitServerConfig(configFile);
-	copyConfigurationFile(FILE_DATA_DIRECTORY, configFile);
+int main(int argc, char **argv) {
+    #define defaultConfigFile "ecool-interlock-server-config.ini"
+    char errBuf[512], configFilePath[1024], serverName[256];
 
-	// Initialize modbus block data with zeros 
-	// (in case a client connect before we connect to the UBS block, 
-	// so we can send something to the client)
-	memset(&modbusBlockData, 0, sizeof(modbusBlockData));
-	
-	msInitGlobalStack();  // Initialize the global message stack 
-	msAddMsg(msGMS(),"---------------------------\n[UBS Server -- NEW SESSION]\n---------------------------");   
+    switch (argc) {
+        case 1: strcpy(configFilePath, defaultConfigFile); break;
+        case 2: strcpy(configFilePath, argv[1]); break;
+        default:
+            MessagePopup("Command line arguments error", "Incorrect number of arguments");
+            exit(1);
+    }
 
-	if (prepareTimeSchedule() < 0) {
-		msAddMsg(msGMS(), "[ERROR] Unable to schedule all necessary events.");
-		WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY); 
-		msFlushMsgs(msGMS());
-		MessagePopup("Internal error", "Unable to schedule events for interacting with devices. See the log file for more details.");
-		return 0;
-	}
+    InitServerConfig(configFilePath);
+    copyConfigurationFile(FILE_LOG_DIRECTORY, configFilePath);
 
-	// Prepare a TCP server for communication with high-end clients. 
-	tcpConnection_InitServerInterface(&tcpSI);
-	tcpConnection_SetBackgroundFunction(&tcpSI, bgdFunc);
-	tcpConnection_SetDataExchangeFunction(&tcpSI, dataExchFunc);
-												  
-	// CVI window setup
-	SetStdioWindowOptions (10000, 0, 0);
-	SetStdioWindowVisibility(1);  // Show the console
-	InstallMainCallback(userMainCallback, 0, 0);  // Install a callback to handle app events (we need it to process attempts of closing the application).
-	SetSleepPolicy(VAL_SLEEP_SOME);  // SUPER IMPORTANT!!! If not set, the application will work in slow mode (which can lead to the issues with TCP stacks, etc.)
-	//--------------------------------------------------------
-	
-	// Initial logging of everything that happend during the initialization of the application.
-	WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
-	msPrintMsgs(msGMS(), stdout);
-	msFlushMsgs(msGMS());  	   
-	//--------------------------------------------------------
-	
-	// Running the server which puts the application to an infinite loop.
-	// The loop can be exited by setting the server_active parameter of a TCP server interface (tcpSI) to zero.
-	tcpConnection_RunServer(TCP_PORT, &tcpSI); 
+    /////////////////////////////////
+    // Body of the program
+    /////////////////////////////////
 
-	// When shut down normally, this section can be reached.
-	// We then save all unsaved data and discard all dynamically allocated resources.
-	WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
-	msPrintMsgs(msGMS(), stdout);
-	msFlushMsgs(msGMS()); 
-		
-	DiscardAllResources();
-	GetKey();
+    // Initialize modbus block data with zeros 
+    // (in case a client connect before we connect to the UBS block, 
+    // so we can send something to the client)
+    memset(&modbusBlockData, 0, sizeof(modbusBlockData));
+    
+    msInitGlobalStack();  // Initialize the global message stack 
+    msAddMsg(msGMS(),"---------------------------\n[UBS Server -- NEW SESSION]\n---------------------------");   
 
-	return 0;
+    if (prepareTimeSchedule() < 0) {
+        msAddMsg(msGMS(), "[ERROR] Unable to schedule all necessary events.");
+        WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY); 
+        msFlushMsgs(msGMS());
+        MessagePopup("Internal error", "Unable to schedule events for interacting with devices. See the log file for more details.");
+        return 0;
+    }
+
+    // Prepare a TCP server for communication with high-end clients. 
+    tcpConnection_InitServerInterface(&tcpSI);
+    tcpConnection_SetBackgroundFunction(&tcpSI, bgdFunc);
+    tcpConnection_SetDataExchangeFunction(&tcpSI, dataExchFunc);
+                                                  
+    // CVI window setup
+    SetStdioWindowOptions (10000, 0, 0);
+    SetStdioWindowVisibility(1);  // Show the console
+    InstallMainCallback(userMainCallback, 0, 0);  // Install a callback to handle app events (we need it to process attempts of closing the application).
+    SetSleepPolicy(VAL_SLEEP_SOME);  // SUPER IMPORTANT!!! If not set, the application will work in slow mode (which can lead to the issues with TCP stacks, etc.)
+    //--------------------------------------------------------
+    
+    // Initial logging of everything that happend during the initialization of the application.
+    WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
+    msPrintMsgs(msGMS(), stdout);
+    msFlushMsgs(msGMS());      
+    //--------------------------------------------------------
+    
+    // Running the server which puts the application to an infinite loop.
+    // The loop can be exited by setting the server_active parameter of a TCP server interface (tcpSI) to zero.
+    tcpConnection_RunServer(TCP_PORT, &tcpSI); 
+
+    // When shut down normally, this section can be reached.
+    // We then save all unsaved data and discard all dynamically allocated resources.
+    WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
+    msPrintMsgs(msGMS(), stdout);
+    msFlushMsgs(msGMS()); 
+        
+    DiscardAllResources();
+    GetKey();
+
+    return 0;
 }
