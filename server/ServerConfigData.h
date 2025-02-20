@@ -11,6 +11,9 @@
 #include "cvidef.h"
 //==============================================================================  
 
+// Server general parameters
+extern char     CFG_SERVER_NAME[256];
+
 // UBS parameters
 extern char 	CFG_UBS_ADC_NAMES[4][8][256];
 extern double 	CFG_UBS_ADC_COEFF[4][8][2];

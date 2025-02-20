@@ -1,6 +1,6 @@
 [Project Header]
 Version = 900
-Number of Files = 17
+Number of Files = 18
 Target Type = "Executable"
 Flags = 16
 Copied From Locked InstrDrv Directory = False
@@ -204,6 +204,17 @@ Path = "TimeMarkers.h"
 Exclude = False
 Project Flags = 0
 Folder = "Include Files"
+
+[File 0018]
+File Type = "Unknown"
+Res Id = 18
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ecool-interlock-server-config.ini"
+Path = "ecool-interlock-server-config.ini"
+Exclude = False
+Project Flags = 0
+Folder = "Not In A Folder"
 
 [Folders]
 User Interface Files Folder Not Added Yet = True

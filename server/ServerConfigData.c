@@ -2,6 +2,9 @@
 #include "ServerConfigData.h" 
 
 //==============================================================================
+// Server general parameters
+char    CFG_SERVER_NAME[256];
+
 char 	CFG_UBS_ADC_NAMES[4][8][256];
 double 	CFG_UBS_ADC_COEFF[4][8][2];
 
@@ -55,6 +58,7 @@ void InitServerConfig(char * configPath) {
 	#define READ_INT_OR_DEFAULT(s, k, var, default_val) if (Ini_ItemExists(iniText, (s), (k))) { READ_INT((s), (k), (var)) } else { (var) = (default_val); }
 	#define READ_STRING_OR_DEFAULT(s, k, var, default_val) if (Ini_ItemExists(iniText, (s), (k))) { READ_STRING((s), (k), (var)) } else { strcpy((var), (default_val)); }
 
+	#define GENERAL_SECTION "GENERAL" 
 	#define FILE_SECTION "FILE" 
 	#define TCP_SECTION "TCP"
 	#define UBS_BLOCK_CONNECTION "UBS_BLOCK_CONNECTION"
@@ -73,6 +77,10 @@ void InitServerConfig(char * configPath) {
 	}
 
 	////////////////////////////////////////////////////
+	// GENERAL //
+	////////////////////////////////////////////////////
+	READ_STRING(GENERAL_SECTION, "serverName", CFG_SERVER_NAME); 
+
 	////////////////////////////////////////////////////
 	// FILE //
 	//////////////////////////////////////////////////// 
