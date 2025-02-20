@@ -57,7 +57,7 @@ void avoidZeroCharacters(char *str,int bytes);
 /////////////////////////////////////////   FUNCTIONS DEFINITIONS   
 void DiscardAllResources(void) {
 	// TODO: disconenct from the UBS server
-	UnregisterTCPServer(TCP_PORT);
+	UnregisterTCPServer(CFG_TCP_PORT);
 	msReleaseGlobalStack();
 }
 
@@ -77,7 +77,7 @@ int CVICALLBACK userMainCallback(int MenuBarHandle, int MenuItemID, int event, v
 					} else
 					{
 						logMessage("[SERVER] Closing the application.");
-						WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
+						WriteLogFiles(msGMS(), CFG_FILE_LOG_DIRECTORY);
 						DiscardAllResources();
 					}
 					// Closing the application
@@ -85,7 +85,7 @@ int CVICALLBACK userMainCallback(int MenuBarHandle, int MenuItemID, int event, v
 				case SYSTEM_CLOSE:
 					// Shutting down the system
 						logMessage("[SERVER] The computer is shutting down! Closing the application.");
-						WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
+						WriteLogFiles(msGMS(), CFG_FILE_LOG_DIRECTORY);
 						DiscardAllResources(); 
 						MessagePopup("Shutting down the system","The server will be closed now.");
 					break;
@@ -99,7 +99,7 @@ int CVICALLBACK userMainCallback(int MenuBarHandle, int MenuItemID, int event, v
 void bgdFunc(void)
 {
 	processScheduleEvents();
-	WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
+	WriteLogFiles(msGMS(), CFG_FILE_LOG_DIRECTORY);
 	msPrintMsgs(msGMS(), stdout);
 	msFlushMsgs(msGMS());
 }
@@ -107,10 +107,10 @@ void bgdFunc(void)
 
 void ubsBlockReconnection(int handle, int arg1) {
 	if (!modbusBlockData.connectionInfo.connected) {
-		ConnectToUbsBlock(UBS_CONNECTION_IP, UBS_CONNECTION_PORT, UBS_CONNECTION_TIMEOUT, &modbusBlockData);
+		ConnectToUbsBlock(CFG_UBS_CONNECTION_IP, CFG_UBS_CONNECTION_PORT, CFG_UBS_CONNECTION_TIMEOUT, &modbusBlockData);
 		
 		if (!modbusBlockData.connectionInfo.connected) {
-			logMessage("[MODBUS-UBS] Next connection request will be in %d seconds.", UBS_RECONNECTION_DELAY);  
+			logMessage("[MODBUS-UBS] Next connection request will be in %d seconds.", CFG_UBS_RECONNECTION_DELAY);  
 		}
 	}
 }
@@ -135,38 +135,38 @@ void adcFileWrite(int handle, int arg1) {
 
 	if (modbusBlockData.connectionInfo.connected) {
 		FormatUbsProcessedData(&modbusBlockData.processed_data, buffer);
-		WriteDataFiles(buffer, FILE_DATA_DIRECTORY);
+		WriteDataFiles(buffer, CFG_FILE_DATA_DIRECTORY);
 	}
 }
 
 
 void deleteOldFiles(int handle, int arg1) {
-	DeleteOldFiles(FILE_LOG_DIRECTORY, FILE_DATA_DIRECTORY, FILE_EVENTS_DIRECTORY, FILE_EXPIRATION);
+	DeleteOldFiles(CFG_FILE_LOG_DIRECTORY, CFG_FILE_DATA_DIRECTORY, CFG_FILE_EVENTS_DIRECTORY, CFG_FILE_EXPIRATION);
 }
 
 
 int prepareTimeSchedule(void) {
 	// Send reconnection request
-	if (addRecordToSchedule(1, 1, UBS_RECONNECTION_DELAY, ubsBlockReconnection, "reconnection", 0) < 0) {
+	if (addRecordToSchedule(1, 1, CFG_UBS_RECONNECTION_DELAY, ubsBlockReconnection, "reconnection", 0) < 0) {
 		msAddMsg(msGMS(), "[ERROR] Unable to add reconnection event.");
 		return -1;	
 	}
 
 	// Send data request
-	if (addRecordToSchedule(1, 0, UBS_DATA_REQUEST_INTERVAL, ubsBlockReadData, "data request", 0) < 0) {
+	if (addRecordToSchedule(1, 0, CFG_UBS_DATA_REQUEST_INTERVAL, ubsBlockReadData, "data request", 0) < 0) {
 		msAddMsg(msGMS(), "[ERROR] Unable to add data update event.");
 		return -1;	
 	}
 
 	// Send log info request
-	if (addRecordToSchedule(1, 0, UBS_LOG_STATE_REQUEST_INTERVAL, ubsBlockReadLogInfo, "log info request", 0) < 0) {
+	if (addRecordToSchedule(1, 0, CFG_UBS_LOG_STATE_REQUEST_INTERVAL, ubsBlockReadLogInfo, "log info request", 0) < 0) {
 		msAddMsg(msGMS(), "[ERROR] Unable to add status update event.");
 		return -1;	
 	}
 
 	// COMMENT THE FOLLOWING IF SMTH GOES WRONG WITH LOGGING  
 	// Send status request
-	if (addRecordToSchedule(1, 0, FILE_DATA_WRITE_INTERVAL, adcFileWrite, "file write", 0) < 0) {
+	if (addRecordToSchedule(1, 0, CFG_FILE_DATA_WRITE_INTERVAL, adcFileWrite, "file write", 0) < 0) {
 		msAddMsg(msGMS(), "[ERROR] Unable to add status update event.");
 		return -1;	
 	}
@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
     }
 
     InitServerConfig(configFilePath);
-    copyConfigurationFile(FILE_LOG_DIRECTORY, configFilePath);
+    copyConfigurationFile(CFG_FILE_LOG_DIRECTORY, configFilePath);
 
     /////////////////////////////////
     // Body of the program
@@ -273,7 +273,7 @@ int main(int argc, char **argv) {
 
     if (prepareTimeSchedule() < 0) {
         msAddMsg(msGMS(), "[ERROR] Unable to schedule all necessary events.");
-        WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY); 
+        WriteLogFiles(msGMS(), CFG_FILE_LOG_DIRECTORY); 
         msFlushMsgs(msGMS());
         MessagePopup("Internal error", "Unable to schedule events for interacting with devices. See the log file for more details.");
         return 0;
@@ -292,18 +292,18 @@ int main(int argc, char **argv) {
     //--------------------------------------------------------
     
     // Initial logging of everything that happend during the initialization of the application.
-    WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
+    WriteLogFiles(msGMS(), CFG_FILE_LOG_DIRECTORY);
     msPrintMsgs(msGMS(), stdout);
     msFlushMsgs(msGMS());      
     //--------------------------------------------------------
     
     // Running the server which puts the application to an infinite loop.
     // The loop can be exited by setting the server_active parameter of a TCP server interface (tcpSI) to zero.
-    tcpConnection_RunServer(TCP_PORT, &tcpSI); 
+    tcpConnection_RunServer(CFG_TCP_PORT, &tcpSI); 
 
     // When shut down normally, this section can be reached.
     // We then save all unsaved data and discard all dynamically allocated resources.
-    WriteLogFiles(msGMS(), FILE_LOG_DIRECTORY);
+    WriteLogFiles(msGMS(), CFG_FILE_LOG_DIRECTORY);
     msPrintMsgs(msGMS(), stdout);
     msFlushMsgs(msGMS()); 
         

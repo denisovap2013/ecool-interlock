@@ -174,7 +174,7 @@ void SetDisconnectedStatus(modbus_connection_info_t * modbusConnectionInfo) {
 	modbusConnectionInfo->connected = 0;
 	modbusConnectionInfo->conversationHandle = 0;
 	logMessage("[MODBUS-UBS]: Error! Disconnected from the UBS block.");
-	logMessage("[MODBUS-UBS] Next connection request will be within %d seconds.", UBS_RECONNECTION_DELAY);
+	logMessage("[MODBUS-UBS] Next connection request will be within %d seconds.", CFG_UBS_RECONNECTION_DELAY);
 }
 
 
@@ -227,7 +227,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 			break;
 		case TCP_DATAREADY:
 			// Read header
-			if (ClientTCPRead(handle, messageHeader, 7, UBS_CONNECTION_READ_TIMEOUT) <= 0) {
+			if (ClientTCPRead(handle, messageHeader, 7, CFG_UBS_CONNECTION_READ_TIMEOUT) <= 0) {
 				logMessage("[MODBUS-UBS]: Error! Unable to read data header from UBS over Modbus-TCP (yet it is available): %s", GetTCPSystemErrorString());
 
 				DisconnectFromTCPServer(handle);
@@ -238,7 +238,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 				bytes_number = getWordFromBigEndian(*(unsigned short*)(messageHeader + 4));
 				
 				// Read the rest of the message (minus one byte from the header's tail)
-				if ( (msgBodySize = ClientTCPRead(handle, messageBody, bytes_number - 1, UBS_CONNECTION_READ_TIMEOUT)) < 0) {
+				if ( (msgBodySize = ClientTCPRead(handle, messageBody, bytes_number - 1, CFG_UBS_CONNECTION_READ_TIMEOUT)) < 0) {
 					logMessage("[MODBUS-UBS]: Error! Unable to read data body from UBS over Modbus-TCP (yet it is available): %s", GetTCPSystemErrorString());
 					
 					DisconnectFromTCPServer(handle);
@@ -377,7 +377,7 @@ ubs_processed_data_t parseUbsData(unsigned char * byteArray) {
 			// Calculating the ADC voltage value
 			/*printf("ADC (%d) channel (%d):\n", i, j); */  // For debug
 			processedData.ADC[i].channelsValues[j] = 1e-3 * adcRawToVoltage_mV(processedData.ADC[i].channelsType[j], processedData.ADC[i].channelsValuesRaw[j]);
-			processedData.ADC[i].channelsProcessedValues[j] = processedData.ADC[i].channelsValues[j] * UBS_ADC_COEFF[i][j][0] + UBS_ADC_COEFF[i][j][1];
+			processedData.ADC[i].channelsProcessedValues[j] = processedData.ADC[i].channelsValues[j] * CFG_UBS_ADC_COEFF[i][j][0] + CFG_UBS_ADC_COEFF[i][j][1];
 			/*printf("Processed value: %lf\n", processedData.ADC[i].channelsProcessedValues[j]);*/  // For debug
 		}
 	}
@@ -470,7 +470,7 @@ void requestUbsData(unsigned int conversationHandle) {
 	requestBody[4] = getBigEndianWord(0);								// The word defining the start address 
 	requestBody[5] = getBigEndianWord(81);							 	// Word defining the number of words to read from the UBS module
 	
-	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
+	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the data read request to the UBS module: %s", GetTCPSystemErrorString());	
 	}
 }
@@ -483,10 +483,10 @@ void requestLogState(unsigned int conversationHandle) {
 	requestBody[1] = getBigEndianWord(0);								// something that must be always zero
 	requestBody[2] = getBigEndianWord(6);								// word, describing the number of bytes of the rest of the message 
 	requestBody[3] = getBigEndianWord((255 << 8) | 3);				 	// Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
-	requestBody[4] = getBigEndianWord(LOG_ADDRESS);						// The word defining the start address 
+	requestBody[4] = getBigEndianWord(CFG_LOG_ADDRESS);						// The word defining the start address 
 	requestBody[5] = getBigEndianWord(4);							 	// Word defining the number of words to read from the UBS module
 	
-	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
+	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the log state read request to the UBS module: %s", GetTCPSystemErrorString());	
 	}	
 }
@@ -503,11 +503,11 @@ void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * 
 	requestBody[3] = getBigEndianWord((255 << 8) | 3);				 	// Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
 	
 	// The word defining the start address 
-	requestBody[4] = getBigEndianWord(LOG_ADDRESS + 4 + logInfo->currentPageIndex * logInfo->logState.pageSize);					
+	requestBody[4] = getBigEndianWord(CFG_LOG_ADDRESS + 4 + logInfo->currentPageIndex * logInfo->logState.pageSize);					
 	
 	requestBody[5] = getBigEndianWord(logInfo->logState.pageSize);	 			// Word defining the number of words to read from the UBS module
 	
-	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
+	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the log pages read request to the UBS module: %s", GetTCPSystemErrorString());	
 	}	
 }
@@ -523,7 +523,7 @@ int requestUbsLogReset(unsigned int conversationHandle) {
 	requestBodyBasePart[1] = getBigEndianWord(0);								 // something that must be always zero
 	requestBodyBasePart[2] = getBigEndianWord(11);								 // word, describing the number of bytes of the rest of the message 
 	requestBodyBasePart[3] = getBigEndianWord((255 << 8) | 0x10);				 // Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
-	requestBodyBasePart[4] = getBigEndianWord(LOG_ADDRESS);					 	 // The word defining the start address 
+	requestBodyBasePart[4] = getBigEndianWord(CFG_LOG_ADDRESS);					 	 // The word defining the start address 
 	requestBodyBasePart[5] = getBigEndianWord(2);							     // Word defining the number of words to write
 	
 	// Copy the data to a bytes array
@@ -537,7 +537,7 @@ int requestUbsLogReset(unsigned int conversationHandle) {
 	requestBody[15] = 0;
 	requestBody[16] = 0;
 	
-	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) < 0) {
+	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) < 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the log reset command to the UBS module: %s", GetTCPSystemErrorString());
 		return 0;
 	}
@@ -606,7 +606,7 @@ int writeUbsDAC(unsigned int conversationHandle, unsigned int dacIndex, unsigned
 	requestBody[13] = (dacVoltageCode >> 8) & 0xFF;
 	requestBody[14] = dacVoltageCode & 0xFF;
 	
-	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), UBS_CONNECTION_SEND_TIMEOUT) < 0) {
+	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) < 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the DAC setup request to the UBS module: %s", GetTCPSystemErrorString());
 		return 0;
 	}	
@@ -764,7 +764,7 @@ void SaveEventsData(ubs_log_info_t * ubsLogInfo) {
 	
 	for (i=0; i < ubsLogInfo->numberOfPagesToRead; i++) {
 		FormatLogPageData(&ubsLogInfo->logDataPages[i], eventPageData);
-		WriteEventsFiles(eventPageData, FILE_EVENTS_DIRECTORY);	
+		WriteEventsFiles(eventPageData, CFG_FILE_EVENTS_DIRECTORY);	
 	}
 }
 
@@ -779,7 +779,7 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, char *outputBuf
 	time_t eventTimeStamp;
 
 	// ReadEventsFiles(const char *eventsDirectory, time_t startTimeStamp, time_t endTimeStamp, char **outputBuffer, int recordsMaxNumber, int *recordsFound) 
-	ReadEventsFiles(FILE_EVENTS_DIRECTORY, startTimeStamp, endTimeStamp, eventsRecords, MAX_RECORDS + 1, &recordsFound);
+	ReadEventsFiles(CFG_FILE_EVENTS_DIRECTORY, startTimeStamp, endTimeStamp, eventsRecords, MAX_RECORDS + 1, &recordsFound);
 	
 	if (recordsFound > MAX_RECORDS) {
 		tooManyRecords = 1;

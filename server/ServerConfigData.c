@@ -1,40 +1,39 @@
 #include "inifile.h"
 #include "ServerConfigData.h" 
 
-#define STOP_CONFIGURATION(x) MessagePopup("Configuration Error", (x)); Ini_Dispose(iniText); exit(0);
 //==============================================================================
-char 	UBS_ADC_NAMES[4][8][256];
-double 	UBS_ADC_COEFF[4][8][2];
+char 	CFG_UBS_ADC_NAMES[4][8][256];
+double 	CFG_UBS_ADC_COEFF[4][8][2];
 
-char	UBS_DAC_NAMES[1][4][256];
+char	CFG_UBS_DAC_NAMES[1][4][256];
 
-char 	UBS_DI_NAMES[2][32][256];
-char 	UBS_DQ_NAMES[3][16][256];
+char 	CFG_UBS_DI_NAMES[2][32][256];
+char 	CFG_UBS_DQ_NAMES[3][16][256];
 
-int		LOG_ADDRESS;
+int		CFG_LOG_ADDRESS;
 	
 // UBS connection parameters
-char 	UBS_CONNECTION_IP[256];
-int		UBS_CONNECTION_PORT;
-int		UBS_CONNECTION_TIMEOUT;
-int		UBS_RECONNECTION_DELAY;
-int		UBS_CONNECTION_READ_TIMEOUT;
-int		UBS_CONNECTION_SEND_TIMEOUT;
+char 	CFG_UBS_CONNECTION_IP[256];
+int		CFG_UBS_CONNECTION_PORT;
+int		CFG_UBS_CONNECTION_TIMEOUT;
+int		CFG_UBS_RECONNECTION_DELAY;
+int		CFG_UBS_CONNECTION_READ_TIMEOUT;
+int		CFG_UBS_CONNECTION_SEND_TIMEOUT;
 
 // UBS requests parameters
-int		UBS_DATA_REQUEST_INTERVAL;
-int		UBS_LOG_STATE_REQUEST_INTERVAL;
+int		CFG_UBS_DATA_REQUEST_INTERVAL;
+int		CFG_UBS_LOG_STATE_REQUEST_INTERVAL;
 
 
 // TCP/IP parameters
-int		TCP_PORT;
+int		CFG_TCP_PORT;
 	
 // LOG parameters
-char	FILE_LOG_DIRECTORY[256];
-char 	FILE_DATA_DIRECTORY[256];
-char 	FILE_EVENTS_DIRECTORY[256]; 
-int		FILE_DATA_WRITE_INTERVAL; //seconds
-int 	FILE_EXPIRATION;
+char	CFG_FILE_LOG_DIRECTORY[256];
+char 	CFG_FILE_DATA_DIRECTORY[256];
+char 	CFG_FILE_EVENTS_DIRECTORY[256]; 
+int		CFG_FILE_DATA_WRITE_INTERVAL; //seconds
+int 	CFG_FILE_EXPIRATION;
 
 
 void InitServerConfig(char * configPath) {
@@ -42,106 +41,94 @@ void InitServerConfig(char * configPath) {
 	
 	int i, j;
 	char key[256], section[64], tmp_text[256];
+	char msg[256];
 	IniText iniText;
 	
+	#define INFORM_AND_STOP(msg) MessagePopup("Configuration Error", (msg)); Ini_Dispose(iniText); exit(0);
+	#define STOP_CONFIGURATION(s, k) sprintf(msg, "Cannot read '%s' from the '%s' section. (Line: %d)", (k), (s), Ini_LineOfLastAccess(iniText)); INFORM_AND_STOP(msg); 
+	#define READ_STRING(s, k, var) if(Ini_GetStringIntoBuffer(iniText, (s), (k), (var), sizeof((var))) <= 0) {STOP_CONFIGURATION((s), (k));} 
+	#define READ_INT(s, k, var) if(Ini_GetInt(iniText, (s), (k), &(var)) <= 0) {STOP_CONFIGURATION((s), (k));}
+	#define READ_DOUBLE(s, k, var) if(Ini_GetDouble(iniText, (s), (k), &(var)) <= 0) {STOP_CONFIGURATION((s), (k));}
+	#define READ_DOUBLE_OR_DEFAULT(s, k, var, default_val) if (Ini_ItemExists(iniText, (s), (k))) { READ_DOUBLE((s), (k), (var)) } else { (var) = (default_val); }
+	#define READ_COEFFICIENTS(s, k, sbuf, c1, c2) if(Ini_GetStringIntoBuffer(iniText, (s), (k), (sbuf), sizeof((sbuf))) <= 0) {STOP_CONFIGURATION((s), (k));} else { if (sscanf((sbuf), "%lf %lf", &(c1), &(c2)) < 2 ) {STOP_CONFIGURATION((s), (k));} }
+	#define READ_COEFFICIENTS_OR_DEFAULT(s, k, sbuf, c1, c2, dc1, dc2) if (Ini_ItemExists(iniText, (s), (k))) { READ_COEFFICIENTS((s), (k), (sbuf), (c1), (c2)) } else { (c1) = (dc1); (c2) = (dc2); }  
+	#define READ_INT_OR_DEFAULT(s, k, var, default_val) if (Ini_ItemExists(iniText, (s), (k))) { READ_INT((s), (k), (var)) } else { (var) = (default_val); }
+	#define READ_STRING_OR_DEFAULT(s, k, var, default_val) if (Ini_ItemExists(iniText, (s), (k))) { READ_STRING((s), (k), (var)) } else { strcpy((var), (default_val)); }
+
+	#define FILE_SECTION "FILE" 
+	#define TCP_SECTION "TCP"
+	#define UBS_BLOCK_CONNECTION "UBS_BLOCK_CONNECTION"
+	#define UBS_BLOCK_LOG "UBS_BLOCK_LOG"
+	#define UBS_REQUESTS "UBS_REQUESTS"
+
+	iniText = Ini_New(0);
+
 	if (!configPath) {
-		STOP_CONFIGURATION("Configuration file path is NULL.");
+		INFORM_AND_STOP("Configuration file path is NULL.");
 	}
 	
-	iniText = Ini_New(1);
-	if( Ini_ReadFromFile(iniText,configPath) < 0 ) {
-		STOP_CONFIGURATION("Cannot read the config file."); 
+	if( Ini_ReadFromFile(iniText, configPath) < 0 ) {
+		sprintf(msg, "Unable to read the configuration file '%s'.", configPath);
+		INFORM_AND_STOP(msg);
 	}
 
 	////////////////////////////////////////////////////
 	////////////////////////////////////////////////////
 	// FILE //
 	//////////////////////////////////////////////////// 
-	// log dir
-	if(Ini_GetStringIntoBuffer(iniText, "FILE", "logDir", FILE_LOG_DIRECTORY, sizeof(FILE_LOG_DIRECTORY)) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'logDir' from the 'FILE' section.");  
-	}
 
-	// data dir
-	if(Ini_GetStringIntoBuffer(iniText, "FILE", "dataDir", FILE_DATA_DIRECTORY, sizeof(FILE_DATA_DIRECTORY)) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'dataDir' from the 'FILE' section.");
-	}
-	
-	// data dir
-	if(Ini_GetStringIntoBuffer(iniText, "FILE", "eventsDir", FILE_EVENTS_DIRECTORY, sizeof(FILE_EVENTS_DIRECTORY)) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'eventsDir' from the 'FILE' section.");
-	}
+	// directories for wrinting data and logs
+	READ_STRING(FILE_SECTION, "logDir", CFG_FILE_LOG_DIRECTORY);
+	READ_STRING(FILE_SECTION, "dataDir", CFG_FILE_DATA_DIRECTORY);
+	READ_STRING(FILE_SECTION, "eventsDir", CFG_FILE_EVENTS_DIRECTORY);
 
 	// data write interval
-	if(Ini_GetInt(iniText, "FILE", "dataWriteInterval", &FILE_DATA_WRITE_INTERVAL) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'dataWriteInterval' from the 'FILE' section."); 
-	}
+	READ_INT(FILE_SECTION, "dataWriteInterval", CFG_FILE_DATA_WRITE_INTERVAL);
 	
 	// dataOldFiles
-	if(Ini_GetInt(iniText, "FILE", "oldFiles", &FILE_EXPIRATION) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'oldFiles' from the 'FILE' section."); 
-	}
+	READ_INT(FILE_SECTION, "oldFiles", CFG_FILE_EXPIRATION);
 
 	////////////////////////////////////////////////////
 	// TCP //
 	//////////////////////////////////////////////////// 
+
 	// Port
-	if(Ini_GetInt(iniText, "TCP", "tcpPort", &TCP_PORT) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'tcpPort' from the 'TCP' section.");
-	}
+	READ_INT(TCP_SECTION, "tcpPort", CFG_TCP_PORT);
 
 	////////////////////////////////////////////////////
 	// UBS_BLOCK_CONNECTION //
 	//////////////////////////////////////////////////// 
-	// Port
-	if(Ini_GetInt(iniText, "UBS_BLOCK_CONNECTION", "port", &UBS_CONNECTION_PORT) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'port' from the 'UBS_BLOCK_CONNECTION' section."); 
-	}
 
-	// Ip
-	if(Ini_GetStringIntoBuffer(iniText, "UBS_BLOCK_CONNECTION", "ip", UBS_CONNECTION_IP, sizeof(UBS_CONNECTION_IP)) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'ip' from the 'UBS_BLOCK_CONNECTION' section."); 
-	}
+	// IP and Port
+	READ_STRING(UBS_BLOCK_CONNECTION, "ip", CFG_UBS_CONNECTION_IP);
+	READ_INT(UBS_BLOCK_CONNECTION, "port", CFG_UBS_CONNECTION_PORT);
 
 	// Connection timeout
-	if(Ini_GetInt(iniText, "UBS_BLOCK_CONNECTION", "connectionTimeout", &UBS_CONNECTION_TIMEOUT) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'connectionTimeout' from the 'UBS_BLOCK_CONNECTION' section."); 
-	}
+	READ_INT(UBS_BLOCK_CONNECTION, "connectionTimeout", CFG_UBS_CONNECTION_TIMEOUT);
 
 	// Reconnection delay
-	if(Ini_GetInt(iniText, "UBS_BLOCK_CONNECTION", "connectionDelay", &UBS_RECONNECTION_DELAY) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'connectionDelay' from the 'UBS_BLOCK_CONNECTION' section.");
-	}
+	READ_INT(UBS_BLOCK_CONNECTION, "connectionDelay", CFG_UBS_RECONNECTION_DELAY);
 
 	// Recieve timeout
-	if(Ini_GetInt(iniText, "UBS_BLOCK_CONNECTION", "readTimeout", &UBS_CONNECTION_READ_TIMEOUT) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'readTimeout' from the 'UBS_BLOCK_CONNECTION' section."); 
-	}
+	READ_INT(UBS_BLOCK_CONNECTION, "readTimeout", CFG_UBS_CONNECTION_READ_TIMEOUT);
 
 	// Send timeout
-	if(Ini_GetInt(iniText, "UBS_BLOCK_CONNECTION", "sendTimeout", &UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'sendTimeout' from the 'UBS_BLOCK_CONNECTION' section."); 
-	}
+	READ_INT(UBS_BLOCK_CONNECTION, "sendTimeout", CFG_UBS_CONNECTION_SEND_TIMEOUT);
 
 	////////////////////////////////////////////////////
 	// UBS_BLOCK_LOG //
 	//////////////////////////////////////////////////// 
+
 	// Log address in the UBS block buffer
-	if(Ini_GetInt(iniText, "UBS_BLOCK_LOG", "logAddress", &LOG_ADDRESS) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'logAddress' from the 'UBS_BLOCK_LOG' section."); 
-	}
+	READ_INT(UBS_BLOCK_LOG, "logAddress", CFG_LOG_ADDRESS);
 	
 	////////////////////////////////////////////////////
 	// UBS_REQUESTS //
-	//////////////////////////////////////////////////// 
-	if(Ini_GetInt(iniText, "UBS_REQUESTS", "dataRequestInterval ", &UBS_DATA_REQUEST_INTERVAL) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'dataRequestInterval ' from the 'UBS_REQUESTS' section."); 
-	}
-	
-	if(Ini_GetInt(iniText, "UBS_REQUESTS", "logStateRequestInterval  ", &UBS_LOG_STATE_REQUEST_INTERVAL) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'logStateRequestInterval  ' from the 'UBS_REQUESTS' section."); 
-	}
-	
+	////////////////////////////////////////////////////
+
+	READ_INT(UBS_REQUESTS, "dataRequestInterval", CFG_UBS_DATA_REQUEST_INTERVAL);
+	READ_INT(UBS_REQUESTS, "logStateRequestInterval", CFG_UBS_LOG_STATE_REQUEST_INTERVAL);
+
 	////////////////////////////////////////////////////
 	// UBS-ADC-xx //
 	//////////////////////////////////////////////////// 
@@ -152,31 +139,26 @@ void InitServerConfig(char * configPath) {
 
 			// Read names
 			sprintf(key, "adcName%d", j);
-			if(Ini_GetStringIntoBuffer(iniText, section, key, UBS_ADC_NAMES[i][j], sizeof(UBS_ADC_NAMES[i][j])) <= 0) {
-				sprintf(tmp_text, "Cannot read '%s' from the '%s' section.", key, section);
-				STOP_CONFIGURATION(tmp_text); 
-			}
+
+			READ_STRING(section, key, CFG_UBS_ADC_NAMES[i][j]);
 				
-			if (strstr(UBS_ADC_NAMES[i][j], "|") != NULL ) {
+			if (strstr(CFG_UBS_ADC_NAMES[i][j], "|") != NULL ) {
 				sprintf(tmp_text, "Name '%s' from the '%s' section contains the prohibited symbol '|'.", key, section);
-				STOP_CONFIGURATION(tmp_text);	
+				INFORM_AND_STOP(tmp_text);
 			}
 			
-			if (!strlen(UBS_ADC_NAMES[i][j])) {
+			if (!strlen(CFG_UBS_ADC_NAMES[i][j])) {
 				sprintf(tmp_text, "Name '%s' from the '%s' section is empty.", key, section);
-				STOP_CONFIGURATION(tmp_text);	
+				INFORM_AND_STOP(tmp_text);	
 			}
 			
 			// Read coefficients
 			sprintf(key, "adcCoeff%d", j);
-			if(Ini_GetStringIntoBuffer(iniText,section,key, stringBuffer, sizeof(stringBuffer)) <= 0) {
-				sprintf(tmp_text, "Cannot read '%s' from the '%s' section.", key, section);
-				STOP_CONFIGURATION(tmp_text); 
-			}
+			READ_STRING(section, key, stringBuffer);
 
-			if (sscanf(stringBuffer, "%lf %lf", &UBS_ADC_COEFF[i][j][0], &UBS_ADC_COEFF[i][j][1]) < 2 ) {
-				sprintf(tmp_text, "Cannot parse ADC coefficients for '%s' from the '%s' section (expected two numbers).", key, section);
-				STOP_CONFIGURATION(tmp_text); 	
+			if (sscanf(stringBuffer, "%lf %lf", &CFG_UBS_ADC_COEFF[i][j][0], &CFG_UBS_ADC_COEFF[i][j][1]) < 2 ) {
+				sprintf(tmp_text, "Cannot parse ADC coefficients for '%s' from the '%s' section (expected two numbers), got '%s'.", key, section, stringBuffer);
+				INFORM_AND_STOP(tmp_text); 	
 			}
 
 		}
@@ -191,19 +173,16 @@ void InitServerConfig(char * configPath) {
 		for (j=0; j<4; j++) {  // DAC channel index
 
 			sprintf(key, "dacName%d", j);
-			if(Ini_GetStringIntoBuffer(iniText, section, key, UBS_DAC_NAMES[i][j], sizeof(UBS_DAC_NAMES[i][j])) <= 0) {
-				sprintf(tmp_text, "Cannot read '%s' from the '%s' section.", key, section);
-				STOP_CONFIGURATION(tmp_text);
-			}
+			READ_STRING(section, key, CFG_UBS_DAC_NAMES[i][j]);
 				
-			if (strstr(UBS_DAC_NAMES[i][j], "|") != NULL ) {
+			if (strstr(CFG_UBS_DAC_NAMES[i][j], "|") != NULL ) {
 				sprintf(tmp_text, "Name '%s' from the '%s' section contains the prohibited symbol '|'.", key, section);
-				STOP_CONFIGURATION(tmp_text);	
+				INFORM_AND_STOP(tmp_text);	
 			}
 			
-			if (!strlen(UBS_DAC_NAMES[i][j])) {
+			if (!strlen(CFG_UBS_DAC_NAMES[i][j])) {
 				sprintf(tmp_text, "Name '%s' from the '%s' section is empty.", key, section);
-				STOP_CONFIGURATION(tmp_text);	
+				INFORM_AND_STOP(tmp_text);	
 			}
 		}
 	}
@@ -217,19 +196,16 @@ void InitServerConfig(char * configPath) {
 		for (j=0; j<32; j++) {  // DI channel index
 
 			sprintf(key,"diName%d", j);
-			if(Ini_GetStringIntoBuffer(iniText, section, key, UBS_DI_NAMES[i][j], sizeof(UBS_DI_NAMES[i][j])) <= 0) {
-				sprintf(tmp_text, "Cannot read '%s' from the '%s' section.", key, section);
-				STOP_CONFIGURATION(tmp_text);
-			}
+			READ_STRING(section, key, CFG_UBS_DI_NAMES[i][j]);
 				
-			if (strstr(UBS_DI_NAMES[i][j], "|") != NULL ) {
+			if (strstr(CFG_UBS_DI_NAMES[i][j], "|") != NULL ) {
 				sprintf(tmp_text, "Name '%s' from the '%s' section contains the prohibited symbol '|'.", key, section);
-				STOP_CONFIGURATION(tmp_text);	
+				INFORM_AND_STOP(tmp_text);	
 			}
 			
-			if (!strlen(UBS_DI_NAMES[i][j])) {
+			if (!strlen(CFG_UBS_DI_NAMES[i][j])) {
 				sprintf(tmp_text, "Name '%s' from the '%s' section is empty.", key, section);
-				STOP_CONFIGURATION(tmp_text);	
+				INFORM_AND_STOP(tmp_text);	
 			}
 		}
 	}
@@ -243,19 +219,16 @@ void InitServerConfig(char * configPath) {
 		for (j=0; j<16; j++) {  // DQ channel index
 
 			sprintf(key, "dqName%d", j);
-			if(Ini_GetStringIntoBuffer(iniText, section, key, UBS_DQ_NAMES[i][j], sizeof(UBS_DQ_NAMES[i][j])) <= 0) {
-				sprintf(tmp_text, "Cannot read '%s' from the '%s' section.", key, section);
-				STOP_CONFIGURATION(tmp_text);
-			}
+			READ_STRING(section, key, CFG_UBS_DQ_NAMES[i][j]);
 				
-			if (strstr(UBS_DQ_NAMES[i][j], "|") != NULL ) {
+			if (strstr(CFG_UBS_DQ_NAMES[i][j], "|") != NULL ) {
 				sprintf(tmp_text, "Name '%s' from the '%s' section contains the prohibited symbol '|'.", key, section);
-				STOP_CONFIGURATION(tmp_text);	
+				INFORM_AND_STOP(tmp_text);	
 			}
 			
-			if (!strlen(UBS_DQ_NAMES[i][j])) {
+			if (!strlen(CFG_UBS_DQ_NAMES[i][j])) {
 				sprintf(tmp_text, "Name '%s' from the '%s' section is empty.", key, section);
-				STOP_CONFIGURATION(tmp_text);	
+				INFORM_AND_STOP(tmp_text);	
 			}
 		}
 	}

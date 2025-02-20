@@ -236,7 +236,7 @@ void FormatDiNames(unsigned int diIndex, char *outputBuffer) {
 
 	for (i=0; i<32; i++) {
 		if (i > 0) strcat(outputBuffer, "|");
-		strcat(outputBuffer, UBS_DI_NAMES[diIndex][i]);
+		strcat(outputBuffer, CFG_UBS_DI_NAMES[diIndex][i]);
 	}
 }
 
@@ -259,7 +259,7 @@ void FormatDqNames(unsigned int dqIndex, char *outputBuffer) {
 
 	for (i=0; i<16; i++) {
 		if (i > 0) strcat(outputBuffer, "|");
-		strcat(outputBuffer, UBS_DQ_NAMES[dqIndex][i]);
+		strcat(outputBuffer, CFG_UBS_DQ_NAMES[dqIndex][i]);
 	}
 }
 
@@ -283,7 +283,7 @@ void FormatAdcNames(unsigned int adcIndex, char *outputBuffer) {
 
 	for (i=0; i<CHANNELS_PER_ADC; i++) {
 		if (i > 0) strcat(outputBuffer, "|");
-		strcat(outputBuffer, UBS_ADC_NAMES[adcIndex][i]);
+		strcat(outputBuffer, CFG_UBS_ADC_NAMES[adcIndex][i]);
 	}
 }
 
@@ -295,7 +295,7 @@ void FormatAdcCoefficients(unsigned int adcIndex, char *outputBuffer) {
 
 	for (i=0; i<CHANNELS_PER_ADC; i++) {
 		if (i > 0) strcat(outputBuffer, " ");
-		sprintf(outputBuffer + strlen(outputBuffer), "%f %f", UBS_ADC_COEFF[adcIndex][i][0], UBS_ADC_COEFF[adcIndex][i][1]);
+		sprintf(outputBuffer + strlen(outputBuffer), "%f %f", CFG_UBS_ADC_COEFF[adcIndex][i][0], CFG_UBS_ADC_COEFF[adcIndex][i][1]);
 	}
 }
 
@@ -307,7 +307,7 @@ void FormatDacNames(unsigned int dacIndex, char *outputBuffer) {
 
 	for (i=0; i<CHANNELS_PER_DAC; i++) {
 		if (i > 0) strcat(outputBuffer, "|");
-		strcat(outputBuffer, UBS_DAC_NAMES[dacIndex][i]);
+		strcat(outputBuffer, CFG_UBS_DAC_NAMES[dacIndex][i]);
 	}
 }
 
