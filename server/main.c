@@ -263,13 +263,27 @@ int main(int argc, char **argv) {
     // Body of the program
     /////////////////////////////////
 
+    // Setup the console window
+    sprintf(serverName, "Server: %s", CFG_SERVER_NAME);
+    
+    SetStdioPort(CVI_STDIO_WINDOW);
+    SetStdioWindowOptions(1000, 0, 0);
+    SetSystemAttribute(ATTR_TASKBAR_BUTTON_TEXT, serverName);
+    SetStdioWindowVisibility(1);  // Show the console
+    SetSleepPolicy(VAL_SLEEP_SOME);  // SUPER IMPORTANT!!! If not set, the application will work in slow mode (which can lead to the issues with TCP stacks, etc.)
+    InstallMainCallback(userMainCallback, 0, 0);  // Install a callback to handle app events (we need it to process attempts of closing the application).
+
+    atexit(DiscardAllResources);
+
     // Initialize modbus block data with zeros 
     // (in case a client connect before we connect to the UBS block, 
     // so we can send something to the client)
     memset(&modbusBlockData, 0, sizeof(modbusBlockData));
     
     msInitGlobalStack();  // Initialize the global message stack 
-    msAddMsg(msGMS(),"---------------------------\n[UBS Server -- NEW SESSION]\n---------------------------");   
+    msAddMsg(msGMS(), "Configuration file: %s", configFilePath);
+    msAddMsg(msGMS(), "Server name: %s", CFG_SERVER_NAME); 
+    msAddMsg(msGMS(),"---------------------------\n[ECool Interlock Server -- NEW SESSION]\n---------------------------");   
 
     if (prepareTimeSchedule() < 0) {
         msAddMsg(msGMS(), "[ERROR] Unable to schedule all necessary events.");
@@ -284,11 +298,6 @@ int main(int argc, char **argv) {
     tcpConnection_SetBackgroundFunction(&tcpSI, bgdFunc);
     tcpConnection_SetDataExchangeFunction(&tcpSI, dataExchFunc);
                                                   
-    // CVI window setup
-    SetStdioWindowOptions (10000, 0, 0);
-    SetStdioWindowVisibility(1);  // Show the console
-    InstallMainCallback(userMainCallback, 0, 0);  // Install a callback to handle app events (we need it to process attempts of closing the application).
-    SetSleepPolicy(VAL_SLEEP_SOME);  // SUPER IMPORTANT!!! If not set, the application will work in slow mode (which can lead to the issues with TCP stacks, etc.)
     //--------------------------------------------------------
     
     // Initial logging of everything that happend during the initialization of the application.
