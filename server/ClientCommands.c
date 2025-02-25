@@ -227,55 +227,55 @@ void PrepareAnswerForClient(const char * command, const modbus_block_data_t * mo
 	time_t startTimeStamp, endTimeStamp;
 	double doubleValue;
 	
-	// UBS_CMD_GET_ALLVALUES
-	if (strstr(command, UBS_CMD_GET_ALLVALUES) == command) {
+	// CMD_A_GET_ALLVALUES
+	if (strstr(command, CMD_A_GET_ALLVALUES) == command) {
 		FormatUbsProcessedData(&modbusBlockData->processed_data, dataBuffer);
-		sprintf(answer, "%s %s\n", UBS_CMD_GET_ALLVALUES, dataBuffer);
+		sprintf(answer, "%s %s\n", CMD_A_GET_ALLVALUES, dataBuffer);
 		return;
 	}
 	
 	// =======
 	// DI & DQ
 	// =======
-	// UBS_CMD_GET_DI_VALUES
-	if (strstr(command, UBS_CMD_GET_DI_VALUES) == command) {
+	// CMD_A_GET_DI_VALUES
+	if (strstr(command, CMD_A_GET_DI_VALUES) == command) {
 		FormatAllDiData(modbusBlockData->processed_data.DI, dataBuffer);
-		sprintf(answer, "%s %s\n", UBS_CMD_GET_DI_VALUES, dataBuffer);
+		sprintf(answer, "%s %s\n", CMD_A_GET_DI_VALUES, dataBuffer);
 		return;
 	}
 	
-	// UBS_CMD_GET_DI_NAMES
-	if (strstr(command, UBS_CMD_GET_DI_NAMES) == command) {
+	// CMD_A_GET_DI_NAMES
+	if (strstr(command, CMD_A_GET_DI_NAMES) == command) {
 		FormatAllDiNames(dataBuffer);
-		sprintf(answer, "%s %s\n", UBS_CMD_GET_DI_NAMES, dataBuffer);
+		sprintf(answer, "%s %s\n", CMD_A_GET_DI_NAMES, dataBuffer);
 		return;
 	}
 	
-	// UBS_CMD_GET_DQ_VALUES
-	if (strstr(command, UBS_CMD_GET_DQ_VALUES) == command) {
+	// CMD_A_GET_DQ_VALUES
+	if (strstr(command, CMD_A_GET_DQ_VALUES) == command) {
 		FormatAllDqData(modbusBlockData->processed_data.DQ, dataBuffer);
-		sprintf(answer, "%s %s\n", UBS_CMD_GET_DQ_VALUES, dataBuffer);
+		sprintf(answer, "%s %s\n", CMD_A_GET_DQ_VALUES, dataBuffer);
 		return;
 	}		  
 	
-	// UBS_CMD_GET_DQ_NAMES 
-	if (strstr(command, UBS_CMD_GET_DQ_NAMES) == command) {
+	// CMD_A_GET_DQ_NAMES 
+	if (strstr(command, CMD_A_GET_DQ_NAMES) == command) {
 		FormatAllDqNames(dataBuffer);
-		sprintf(answer, "%s %s\n", UBS_CMD_GET_DQ_NAMES, dataBuffer);
+		sprintf(answer, "%s %s\n", CMD_A_GET_DQ_NAMES, dataBuffer);
 		return;
 	}
 	
 	// ===
 	// ADC
 	// ===
-	// UBS_CMD_GET_ADC_VALUES  
-	if (strstr(command, UBS_CMD_GET_ADC_VALUES) == command) {
-		if (sscanf(command + strlen(UBS_CMD_GET_ADC_VALUES), "%d", &deviceIndex) == 1) {
+	// CMD_A_GET_ADC_VALUES  
+	if (strstr(command, CMD_A_GET_ADC_VALUES) == command) {
+		if (sscanf(command + strlen(CMD_A_GET_ADC_VALUES), "%d", &deviceIndex) == 1) {
 			if (deviceIndex < 0 || deviceIndex >= ADC_NUMBER) {
 				sprintf(answer, "ERROR:[%s] ADC index is out of range [0, %d].\n", command, ADC_NUMBER - 1);		
 			} else {
 				FormatAdcData(&modbusBlockData->processed_data, deviceIndex, dataBuffer);
-				sprintf(answer, "%s %s\n", UBS_CMD_GET_ADC_VALUES, dataBuffer);
+				sprintf(answer, "%s %s\n", CMD_A_GET_ADC_VALUES, dataBuffer);
 			}
 		} else {
 			sprintf(answer, "ERROR:[%s] Unable to read ADC index.\n", command);	
@@ -284,14 +284,14 @@ void PrepareAnswerForClient(const char * command, const modbus_block_data_t * mo
 		return;
 	}
 	
-	// UBS_CMD_GET_ADC_NAMES  
-	if (strstr(command, UBS_CMD_GET_ADC_NAMES) == command) {
-		if (sscanf(command + strlen(UBS_CMD_GET_ADC_NAMES), "%d", &deviceIndex) == 1) {
+	// CMD_A_GET_ADC_NAMES  
+	if (strstr(command, CMD_A_GET_ADC_NAMES) == command) {
+		if (sscanf(command + strlen(CMD_A_GET_ADC_NAMES), "%d", &deviceIndex) == 1) {
 			if (deviceIndex < 0 || deviceIndex >= ADC_NUMBER) {
 				sprintf(answer, "ERROR:[%s] ADC index is out of range [0, %d].\n", command, ADC_NUMBER - 1);		
 			} else {
 				FormatAdcNames(deviceIndex, dataBuffer);
-				sprintf(answer, "%s %s\n", UBS_CMD_GET_ADC_NAMES, dataBuffer);
+				sprintf(answer, "%s %s\n", CMD_A_GET_ADC_NAMES, dataBuffer);
 			}
 		} else {
 			sprintf(answer, "ERROR:[%s] Unable to read ADC index.\n", command);	
@@ -300,14 +300,14 @@ void PrepareAnswerForClient(const char * command, const modbus_block_data_t * mo
 		return;
 	}
 	
-	// UBS_CMD_GET_ADC_COEFFICIENTS  
-	if (strstr(command, UBS_CMD_GET_ADC_COEFFICIENTS) == command) {
-		if (sscanf(command + strlen(UBS_CMD_GET_ADC_COEFFICIENTS), "%d", &deviceIndex) == 1) {
+	// CMD_A_GET_ADC_COEFFICIENTS  
+	if (strstr(command, CMD_A_GET_ADC_COEFFICIENTS) == command) {
+		if (sscanf(command + strlen(CMD_A_GET_ADC_COEFFICIENTS), "%d", &deviceIndex) == 1) {
 			if (deviceIndex < 0 || deviceIndex >= ADC_NUMBER) {
 				sprintf(answer, "ERROR:[%s] ADC index is out of range [0, %d].\n", command, ADC_NUMBER - 1);		
 			} else {
 				FormatAdcCoefficients(deviceIndex, dataBuffer);
-				sprintf(answer, "%s %s\n", UBS_CMD_GET_ADC_COEFFICIENTS, dataBuffer);
+				sprintf(answer, "%s %s\n", CMD_A_GET_ADC_COEFFICIENTS, dataBuffer);
 			}
 		} else {
 			sprintf(answer, "ERROR:[%s] Unable to read ADC index.\n", command);	
@@ -319,14 +319,14 @@ void PrepareAnswerForClient(const char * command, const modbus_block_data_t * mo
 	// ===
 	// DAC
 	// ===
-	// UBS_CMD_GET_DAC_VALUES
-	if (strstr(command, UBS_CMD_GET_DAC_VALUES) == command) {
-		if (sscanf(command + strlen(UBS_CMD_GET_DAC_VALUES), "%d", &deviceIndex) == 1) {
+	// CMD_A_GET_DAC_VALUES
+	if (strstr(command, CMD_A_GET_DAC_VALUES) == command) {
+		if (sscanf(command + strlen(CMD_A_GET_DAC_VALUES), "%d", &deviceIndex) == 1) {
 			if (deviceIndex < 0 || deviceIndex >= DAC_NUMBER) {
 				sprintf(answer, "ERROR:[%s] DAC index is out of range [0, %d].\n", command, DAC_NUMBER - 1);		
 			} else {
 				FormatDacData(&modbusBlockData->processed_data, deviceIndex, dataBuffer);
-				sprintf(answer, "%s %s\n", UBS_CMD_GET_DAC_VALUES, dataBuffer);
+				sprintf(answer, "%s %s\n", CMD_A_GET_DAC_VALUES, dataBuffer);
 			}
 		} else {
 			sprintf(answer, "ERROR:[%s] Unable to read DAC index.\n", command);	
@@ -335,14 +335,14 @@ void PrepareAnswerForClient(const char * command, const modbus_block_data_t * mo
 		return;
 	}
 	
-	// UBS_CMD_GET_DAC_NAMES
-	if (strstr(command, UBS_CMD_GET_DAC_NAMES) == command) {
-		if (sscanf(command + strlen(UBS_CMD_GET_DAC_NAMES), "%d", &deviceIndex) == 1) {
+	// CMD_A_GET_DAC_NAMES
+	if (strstr(command, CMD_A_GET_DAC_NAMES) == command) {
+		if (sscanf(command + strlen(CMD_A_GET_DAC_NAMES), "%d", &deviceIndex) == 1) {
 			if (deviceIndex < 0 || deviceIndex >= DAC_NUMBER) {
 				sprintf(answer, "ERROR:[%s] DAC index is out of range [0, %d].\n", command, DAC_NUMBER - 1);		
 			} else {
 				FormatDacNames(deviceIndex, dataBuffer);
-				sprintf(answer, "%s %s\n", UBS_CMD_GET_DAC_NAMES, dataBuffer);
+				sprintf(answer, "%s %s\n", CMD_A_GET_DAC_NAMES, dataBuffer);
 			}
 		} else {
 			sprintf(answer, "ERROR:[%s] Unable to read DAC index.\n", command);	
@@ -351,9 +351,9 @@ void PrepareAnswerForClient(const char * command, const modbus_block_data_t * mo
 		return;
 	}
 	
-	// UBS_CMD_SET_DAC_VALUE  
-	if (strstr(command, UBS_CMD_SET_DAC_VALUE) == command) {
-		if (sscanf(command + strlen(UBS_CMD_SET_DAC_VALUE), "%d %d %lf", &deviceIndex, &channelIndex, &doubleValue) == 3) {
+	// CMD_A_SET_DAC_VALUE  
+	if (strstr(command, CMD_A_SET_DAC_VALUE) == command) {
+		if (sscanf(command + strlen(CMD_A_SET_DAC_VALUE), "%d %d %lf", &deviceIndex, &channelIndex, &doubleValue) == 3) {
 			if (deviceIndex < 0 || deviceIndex >= DAC_NUMBER) {
 				sprintf(answer, "ERROR:[%s] DAC index (%d) is out of range [0, %d].\n", command, deviceIndex, DAC_NUMBER - 1);	
 				
@@ -366,7 +366,7 @@ void PrepareAnswerForClient(const char * command, const modbus_block_data_t * mo
 			} else {
 			
 				if (writeUbsDAC(modbusBlockData->connectionInfo.conversationHandle, deviceIndex, channelIndex, doubleValue)) {
-					sprintf(answer, "%s SUCCESS\n", UBS_CMD_SET_DAC_VALUE, dataBuffer); 	
+					sprintf(answer, "%s SUCCESS\n", CMD_A_SET_DAC_VALUE, dataBuffer); 	
 				} else {
 					sprintf(answer, "ERROR:[%s] Unable to send a command to the UBS block.\n", command);		
 				}
@@ -382,24 +382,24 @@ void PrepareAnswerForClient(const char * command, const modbus_block_data_t * mo
 	// ===========
 	// Diagnostics
 	// ===========
-	// UBS_CMD_GET_DIAGNOSTICS
-	if (strstr(command, UBS_CMD_GET_DIAGNOSTICS) == command) {
+	// CMD_A_GET_DIAGNOSTICS
+	if (strstr(command, CMD_A_GET_DIAGNOSTICS) == command) {
 		FormatDiagnosticsData(&modbusBlockData->processed_data, dataBuffer);
-		sprintf(answer, "%s %s\n", UBS_CMD_GET_DIAGNOSTICS, dataBuffer);
+		sprintf(answer, "%s %s\n", CMD_A_GET_DIAGNOSTICS, dataBuffer);
 		return;
 	}
 	
-	// UBS_CMD_GET_CONNECTION_STATE
-	if (strstr(command, UBS_CMD_GET_CONNECTION_STATE) == command) {
-		sprintf(answer, "%s %d\n", UBS_CMD_GET_CONNECTION_STATE, modbusBlockData->connectionInfo.connected);
+	// CMD_A_GET_CONNECTION_STATE
+	if (strstr(command, CMD_A_GET_CONNECTION_STATE) == command) {
+		sprintf(answer, "%s %d\n", CMD_A_GET_CONNECTION_STATE, modbusBlockData->connectionInfo.connected);
 		return;
 	}
 	
-	// UBS_CMD_GET_EVENTS
-	if (strstr(command, UBS_CMD_GET_EVENTS) == command) {
-		if (sscanf(command + strlen(UBS_CMD_GET_EVENTS), "%u %u", &startTimeStamp, &endTimeStamp) == 2) {
+	// CMD_A_GET_EVENTS
+	if (strstr(command, CMD_A_GET_EVENTS) == command) {
+		if (sscanf(command + strlen(CMD_A_GET_EVENTS), "%u %u", &startTimeStamp, &endTimeStamp) == 2) {
 			if (FormatEventsData(startTimeStamp, endTimeStamp, dataBuffer)) {
-				sprintf(answer, "%s %s\n", UBS_CMD_GET_EVENTS, dataBuffer);	
+				sprintf(answer, "%s %s\n", CMD_A_GET_EVENTS, dataBuffer);	
 			} else {
 				sprintf(answer, "ERROR:[%s] Unable to read the events data. See server logs.\n", command);	
 			}

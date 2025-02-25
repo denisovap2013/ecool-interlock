@@ -63,27 +63,6 @@
 #define CMD_P_GET_EVENTS "INTERLOCK:GET:EVENTS"
 #define CMD_A_GET_EVENTS "UBS:GET:EVENTS"
 
-// Old commands constants
-#define UBS_CMD_GET_ALLVALUES "UBS:GET:ALLVALUES"
-
-#define UBS_CMD_GET_DI_VALUES "UBS:GET:DI:VALUES"
-#define UBS_CMD_GET_DI_NAMES  "UBS:GET:DI:NAMES"
-#define UBS_CMD_GET_DQ_VALUES "UBS:GET:DQ:VALUES"
-#define UBS_CMD_GET_DQ_NAMES  "UBS:GET:DQ:NAMES"
-
-#define UBS_CMD_GET_DIAGNOSTICS "UBS:GET:DIAGNOSTICS"
-
-#define UBS_CMD_GET_ADC_VALUES "UBS:GET:ADC:VALUES"
-#define UBS_CMD_GET_ADC_NAMES "UBS:GET:ADC:NAMES"
-#define UBS_CMD_GET_ADC_COEFFICIENTS "UBS:GET:ADC:COEFFS"
-
-#define UBS_CMD_SET_DAC_VALUE "UBS:SET:DAC:VALUE"
-#define UBS_CMD_GET_DAC_VALUES "UBS:GET:DAC:VALUES"
-#define UBS_CMD_GET_DAC_NAMES "UBS:GET:DAC:NAMES"
-		
-#define UBS_CMD_GET_CONNECTION_STATE "UBS:GET:CONNECTIONSTATE"
-
-#define UBS_CMD_GET_EVENTS "UBS:GET:EVENTS"
 //==============================================================================
 // Types
 typedef int (*parserFunciton)(char *commandBody, char *answerBuffer, char *ip);

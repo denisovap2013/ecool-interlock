@@ -247,7 +247,7 @@ void dataExchFuncOld(unsigned handle,void * arg)
 
 int main(int argc, char **argv) {
     #define defaultConfigFile "ecool-interlock-server-config.ini"
-    char errBuf[512], configFilePath[1024], serverName[256];
+    char configFilePath[1024], serverName[256];
 
     switch (argc) {
         case 1: strcpy(configFilePath, defaultConfigFile); break;
