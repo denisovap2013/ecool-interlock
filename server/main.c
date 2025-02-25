@@ -45,19 +45,20 @@ void DiscardAllResources(void);
 
 
 /////////////////////////////////////////   
-void dataExchFunc(unsigned handle,void * arg);  
+void dataExchFuncOld(unsigned handle, void * arg);  
 
 
 void bgdFunc(void);
 
 
-void avoidZeroCharacters(char *str,int bytes);
+void avoidZeroCharacters(char *str, int bytes);
 
 
 /////////////////////////////////////////   FUNCTIONS DEFINITIONS   
 void DiscardAllResources(void) {
 	// TODO: disconenct from the UBS server
 	UnregisterTCPServer(CFG_TCP_PORT);
+    ReleaseCommandParsers();
 	msReleaseGlobalStack();
 }
 
@@ -180,7 +181,7 @@ int prepareTimeSchedule(void) {
 }
 
 
-void prepareTcpCommand(char *str,int bytes){
+void prepareTcpCommandOld(char *str,int bytes){
 	int i;
 	for (i=0; i<(bytes-1);i++) {
 		if (str[i] == 0) str[i]=' ';
@@ -193,7 +194,7 @@ void prepareTcpCommand(char *str,int bytes){
 }
 
 
-void dataExchFunc(unsigned handle,void * arg)
+void dataExchFuncOld(unsigned handle,void * arg)
 {
 	static char command[MAX_RECEIVED_BYTES] = "";
 	static char answer[MAX_RECEIVED_BYTES];
@@ -208,7 +209,7 @@ void dataExchFunc(unsigned handle,void * arg)
 	}
 
 	command[byteRecv] = 0;  // Create a zero-ending string
-	prepareTcpCommand(command, byteRecv);
+	prepareTcpCommandOld(command, byteRecv);
 	
 	eofCounter = 0;
 	lfp = command;
@@ -296,7 +297,7 @@ int main(int argc, char **argv) {
     // Prepare a TCP server for communication with high-end clients. 
     tcpConnection_InitServerInterface(&tcpSI);
     tcpConnection_SetBackgroundFunction(&tcpSI, bgdFunc);
-    tcpConnection_SetDataExchangeFunction(&tcpSI, dataExchFunc);
+    tcpConnection_SetDataExchangeFunction(&tcpSI, dataExchFuncOld);
                                                   
     //--------------------------------------------------------
     

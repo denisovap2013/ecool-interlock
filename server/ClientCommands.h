@@ -23,6 +23,14 @@
 
 //==============================================================================
 // Constants
+#define MAX_PARSERS_NUM 128
+
+#define CMD_P_ "INTERLOCK:"
+#define CMD_A_ "UBS:"
+
+#define CMD_P_SINGLE_FULLINFO "INTERLOCK:GET:ALLVALUES"
+#define CMD_A_SINGLE_FULLINFO "UBS:GET:ALLVALUES"
+
 #define UBS_CMD_GET_ALLVALUES "UBS:GET:ALLVALUES"
 
 #define UBS_CMD_GET_DI_VALUES "UBS:GET:DI:VALUES"
@@ -45,12 +53,18 @@
 #define UBS_CMD_GET_EVENTS "UBS:GET:EVENTS"
 //==============================================================================
 // Types
+typedef int (*parserFunciton)(char *commandBody, char *answerBuffer, char *ip);
 
 //==============================================================================
 // External variables
 
 //==============================================================================
 // Global functions
+void InitCommandParsers(void);
+void ReleaseCommandParsers(void);
+void registerCommandParser(char * command, char *alias, parserFunciton parser);
+parserFunciton getCommandparser(char *command);
+void dataExchFunc(unsigned handle, char *ip);  
 
 void PrepareAnswerForClient(const char * command, const modbus_block_data_t * modbusBlockData, char *answer);
 

@@ -11,10 +11,16 @@
 //==============================================================================
 // Include files
 
+#include <userint.h>
 #include <ansi_c.h>
+#include <tcpsupp.h> 
+
+#include "MessageStack.h"
+#include "TimeMarkers.h"
 #include "ClientCommands.h"
 #include "ModBusUbs.h"
 #include "ServerConfigData.h"
+#include "hash_map.h"
 
 //==============================================================================
 // Constants
@@ -27,12 +33,193 @@
 
 //==============================================================================
 // Static functions
+int processUserCommand(char *userCmd, char *answerBuffer, char *ip);
+void toupperCase(char *text);
+void logNotification(char *ip, char *message, ...);
 
 //==============================================================================
 // Global variables
+parserFunciton RegisteredParsers[MAX_PARSERS_NUM];
+
+int registeredParsersNum = 0;
+int parsersInitialized = 0;
+map_int_t commandsHashMap;
+
+#define MAX_RECEIVED_BYTES 3000
 
 //==============================================================================
 // Global functions
+
+void InitCommandParsers(void) {
+	if (parsersInitialized) return;
+
+	map_init(&commandsHashMap);
+	registeredParsersNum = 0;
+	parsersInitialized = 1;	
+	
+	// Registering commands parsers
+    // registerCommandParser(CMD_NAME_CONSTANT, CMD_NAME_ALIAS, cmdParserFunction);
+}
+
+void ReleaseCommandParsers(void) {
+	if (!parsersInitialized) return;
+
+	map_deinit(&commandsHashMap);
+	registeredParsersNum = 0;
+	parsersInitialized = 0;	
+}
+
+void registerCommandParser(char *command, char *alias, parserFunciton parser) {
+	static char msg[256];
+	if (registeredParsersNum >= MAX_PARSERS_NUM) { 
+		sprintf(msg, "Unable to register a command '%s'. Maximum number of parsers (%d) exceeded.", command, MAX_PARSERS_NUM);
+		MessagePopup("Internal application error.", msg);
+		exit(0);
+	}
+	
+	// Add command parser to the list and add mapping from the command name/alias
+	// to the index of the added element in the list.
+	RegisteredParsers[registeredParsersNum] = parser;
+	map_set(&commandsHashMap, command, registeredParsersNum);
+	if (alias)  map_set(&commandsHashMap, alias, registeredParsersNum);
+	
+	registeredParsersNum++;
+}
+
+void prepareTcpCommand(char *str, int bytes){
+	int i, j;
+	
+	j = 0;
+	for (i=0; i < bytes; i++) {
+		if (str[i] != 0) str[j++] = str[i];
+	}
+
+	if (bytes == MAX_RECEIVED_BYTES) str[MAX_RECEIVED_BYTES-1] = 0;
+	else str[j] = 0;
+}
+
+void toupperCase(char *text) {
+	char *p;
+	p = text;
+	while (*p != 0) {
+		*p = toupper(*p);
+		p++;
+	}
+}
+
+void dataExchFunc(unsigned handle, char *ip)
+{
+	static char command[MAX_RECEIVED_BYTES * 2] = "";
+	static char subcommand[MAX_RECEIVED_BYTES * 2];
+	static char buf[MAX_RECEIVED_BYTES];
+	static char *lfp;
+	static int byteRecv;
+	static char answerBuffer[1024];
+	static int checkInitialization = 1;
+
+	// Check that all necessary initializations are done
+	if (checkInitialization) {
+		if (!parsersInitialized) {
+			MessagePopup("Runtime Error", "Command parsers are not initialized");
+			exit(0);
+		}
+		checkInitialization = 0;	
+	}
+	
+	byteRecv = ServerTCPRead(handle, buf, MAX_RECEIVED_BYTES, 0);
+	if ( byteRecv <= 0 )
+	{
+		logMessage("[SERVER CLIENT] Error occured while receiving messages from the client >> %s", GetTCPSystemErrorString()); 
+		return;
+	}
+	
+	prepareTcpCommand(buf, byteRecv);
+	strcpy(command, buf);
+	
+	//printf("%s\n",command);
+	
+	// Selecting all incoming commands
+	while ( (lfp = strchr(command, '\n')) != NULL ) {
+		lfp[0] = 0;
+		strcpy(subcommand, command);
+		strcpy(command, lfp+1);
+		processUserCommand(subcommand, answerBuffer, ip);
+		if (answerBuffer[0] != 0) ServerTCPWrite(handle, answerBuffer, strlen(answerBuffer) + 1, 0);
+	}
+	
+	// It's likely that extremly long strings are not commands
+}
+
+parserFunciton getCommandparser(char *command) {
+	int *cmdIndex;
+	char * symbol;
+	
+	symbol = command;
+	while (*symbol != 0) {
+	    *symbol = toupper(*symbol);
+		symbol++;
+	}
+	cmdIndex = map_get(&commandsHashMap, command);
+	if (cmdIndex) return RegisteredParsers[*cmdIndex];
+	
+	return 0;
+}
+
+int processUserCommand(char *userCmd, char *answerBuffer, char *ip) {
+	char cmdName[256];
+	int cursor;
+	static char parserAnswer[1024];
+	parserFunciton parser;
+	int result;
+	
+	sscanf(userCmd, "%s%n", cmdName, &cursor);
+	
+	parser = getCommandparser(cmdName);
+	
+	answerBuffer[0] = 0;  // Empty string (no answer)
+	parserAnswer[0] = 0;   
+	
+	if (parser) {
+		result = parser(userCmd + cursor, parserAnswer, ip);
+		
+		// Check for errors
+		if (result < 0) {
+			logNotification(ip, "[ERROR] Incorrect command data: \"%s\"", userCmd);
+			sprintf(answerBuffer, "!%s\n", userCmd); 
+			return -1; // Error occurred
+		}
+
+		if (result == 0) return 0;  
+		
+		if (strlen(parserAnswer))
+			sprintf(answerBuffer, "%s %s\n", cmdName, parserAnswer);
+
+	} else {
+		logNotification(ip, "[ERROR] Unknown command: \"%s\"", userCmd);
+		sprintf(answerBuffer, "?%s\n", userCmd);	
+	}
+	
+	return 1; // Command processed successfully (including "unknown" commands)
+}
+
+void logNotification(char *ip, char *message, ...) {
+
+	char buf[512];
+	va_list arglist;
+
+	va_start(arglist, message);
+	vsprintf(buf, message, arglist);
+	va_end(arglist);
+
+	msAddMsg(msGMS(),"%s [CLIENT] [IP: %s] %s", TimeStamp(0), ip, buf);
+
+}
+
+//////////////////////////////////
+// PARSERS
+//////////////////////////////////
+
+
 
 void PrepareAnswerForClient(const char * command, const modbus_block_data_t * modbusBlockData, char *answer) {
 	static char dataBuffer[3000];
