@@ -78,7 +78,29 @@ void registerCommandParser(char * command, char *alias, parserFunciton parser);
 parserFunciton getCommandparser(char *command);
 void dataExchFunc(unsigned handle, char *ip);  
 
-void PrepareAnswerForClient(const char * command, const modbus_block_data_t * modbusBlockData, char *answer);
+// Commands parsers (cmdBody, answerBuffer, ip)
+
+int cmdUnknownCommandParser(char *, char *, char *);
+
+int cmdParserGetAllValues(char *, char *, char *);
+int cmdParserGetDiValues(char *, char *, char *);
+int cmdParserGetDiNames(char *, char *, char *);
+int cmdParserGetDqValues(char *, char *, char *);
+int cmdParserGetDqNames(char *, char *, char *);
+
+int cmdParserGetDiagnostics(char *, char *, char *);
+
+int cmdParserGetAdcValues(char *, char *, char *);
+int cmdParserGetAdcNames(char *, char *, char *);
+int cmdParserGetAdcCoefficients(char *, char *, char *);
+
+int cmdParserSetDacValue(char *, char *, char *);
+int cmdParserGetDacValues(char *, char *, char *);
+int cmdParserGetDacNames(char *, char *, char *);
+
+int cmdParserGetConnectinState(char *, char *, char *);
+
+int cmdParserGetEvents(char *, char *, char *);
 
 void FormatDiNames(unsigned int diIndex, char *outputBuffer);
 void FormatAllDiNames(char *outputBuffer);

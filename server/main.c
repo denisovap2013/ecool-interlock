@@ -16,12 +16,11 @@
 #include "ModBusUbs.h"
 #include "Logging.h"
 #include "ClientCommands.h"
+#include "ServerData.h"
 
 #define MAX_RECEIVED_BYTES 3000
 
 // Variables
-
-modbus_block_data_t modbusBlockData = {0};
 
 tcpConnection_ServerInterface_t tcpSI;
 
@@ -45,19 +44,14 @@ void DiscardAllResources(void);
 
 
 /////////////////////////////////////////   
-void dataExchFuncOld(unsigned handle, void * arg);  
-
-
 void bgdFunc(void);
-
-
-void avoidZeroCharacters(char *str, int bytes);
 
 
 /////////////////////////////////////////   FUNCTIONS DEFINITIONS   
 void DiscardAllResources(void) {
 	// TODO: disconenct from the UBS server
 	UnregisterTCPServer(CFG_TCP_PORT);
+	ReleaseServerData();
     ReleaseCommandParsers();
 	msReleaseGlobalStack();
 }
@@ -194,50 +188,6 @@ void prepareTcpCommandOld(char *str,int bytes){
 }
 
 
-void dataExchFuncOld(unsigned handle,void * arg)
-{
-	static char command[MAX_RECEIVED_BYTES] = "";
-	static char answer[MAX_RECEIVED_BYTES];
-	char *lfp;
-	int byteRecv, eofCounter;
-	
-	byteRecv = ServerTCPRead(handle, command, MAX_RECEIVED_BYTES - 1, 0);
-	if ( byteRecv <= 0 )
-	{
-		logMessage("[SERVER CLIENT] Error occured while receiving messages from the client >> %s", GetTCPSystemErrorString());
-		return;
-	}
-
-	command[byteRecv] = 0;  // Create a zero-ending string
-	prepareTcpCommandOld(command, byteRecv);
-	
-	eofCounter = 0;
-	lfp = command;
-	
-	while ( (lfp = strstr(lfp, "\n")) != NULL ) {
-		eofCounter++;
-		lfp++;
-	}
-	
-	lfp = strstr(command, "\n");
-	
-	if (eofCounter == 0) {
-		sprintf(answer, "ERROR: [%s] No end-of-line symbol.\n", command); 	
-	} else if (eofCounter > 1){
-		sprintf(answer, "ERROR: Multiple (%d) end-of-line symbols.\n", eofCounter); 	
-	} else if (lfp == command) {
-		sprintf(answer, "ERROR: Empty command.\n"); 
-	} else {
-		lfp[0] = 0;
-		PrepareAnswerForClient(command, &modbusBlockData, answer);
-	}
-	
-	if (ServerTCPWrite(handle, answer, strlen(answer), 100) < 0) {
-		logMessage("[SERVER CLIENT] Error occured while sending a message to the client >> %s", GetTCPSystemErrorString());
-	}
-}
-
-
 /////////////////////////////////////////////////////////////////////
 //=================================================================== 
 //===================================================================
@@ -276,15 +226,19 @@ int main(int argc, char **argv) {
 
     atexit(DiscardAllResources);
 
-    // Initialize modbus block data with zeros 
-    // (in case a client connect before we connect to the UBS block, 
-    // so we can send something to the client)
-    memset(&modbusBlockData, 0, sizeof(modbusBlockData));
+    InitServerData();
     
     msInitGlobalStack();  // Initialize the global message stack 
     msAddMsg(msGMS(), "Configuration file: %s", configFilePath);
     msAddMsg(msGMS(), "Server name: %s", CFG_SERVER_NAME); 
     msAddMsg(msGMS(),"---------------------------\n[ECool Interlock Server -- NEW SESSION]\n---------------------------");   
+
+    // Prepare a TCP server for communication with high-end clients. 
+    tcpConnection_InitServerInterface(&tcpSI);
+    tcpConnection_SetBackgroundFunction(&tcpSI, bgdFunc);
+    tcpConnection_SetDataExchangeFunction(&tcpSI, dataExchFunc);
+
+    InitCommandParsers();  
 
     if (prepareTimeSchedule() < 0) {
         msAddMsg(msGMS(), "[ERROR] Unable to schedule all necessary events.");
@@ -293,11 +247,6 @@ int main(int argc, char **argv) {
         MessagePopup("Internal error", "Unable to schedule events for interacting with devices. See the log file for more details.");
         return 0;
     }
-
-    // Prepare a TCP server for communication with high-end clients. 
-    tcpConnection_InitServerInterface(&tcpSI);
-    tcpConnection_SetBackgroundFunction(&tcpSI, bgdFunc);
-    tcpConnection_SetDataExchangeFunction(&tcpSI, dataExchFuncOld);
                                                   
     //--------------------------------------------------------
     

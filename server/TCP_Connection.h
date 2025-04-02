@@ -26,7 +26,7 @@ typedef struct tcpConnection_ServerInterface
 {
 	int server_active;
 	void (*bgdFuncs)(void);
-	void (*dataExchangeFunc)(unsigned handle,void *arg);
+	void (*dataExchangeFunc)(unsigned handle, char *ip);
 	unsigned  clients[TCP_CONNECTION_MAX_CLIENTS];
 	int clientsNum;
 } tcpConnection_ServerInterface_t;
@@ -34,7 +34,7 @@ typedef struct tcpConnection_ServerInterface
 int tcpConnection_InitServerInterface(tcpConnection_ServerInterface_t * tcpSI);
 int tcpConnection_ClientNumberFromHandle(tcpConnection_ServerInterface_t * tcpSI, unsigned handle);
 int tcpConnection_SetBackgroundFunction(tcpConnection_ServerInterface_t * tcpSI, void (*bgdFunc)(void));
-int tcpConnection_SetDataExchangeFunction(tcpConnection_ServerInterface_t * tcpSI, void (*dataExchangeFunc)(unsigned handle,void *arg));
+int tcpConnection_SetDataExchangeFunction(tcpConnection_ServerInterface_t * tcpSI, void (*dataExchangeFunc)(unsigned handle, char *ip));
 
 int tcpConnection_ServerCallback(unsigned handle, int xType, int errCode, void * callbackData);
 int tcpConnection_RunServer(int Port, tcpConnection_ServerInterface_t * tcpSI );

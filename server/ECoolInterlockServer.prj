@@ -1,6 +1,6 @@
 [Project Header]
 Version = 900
-Number of Files = 20
+Number of Files = 22
 Target Type = "Executable"
 Flags = 16
 Copied From Locked InstrDrv Directory = False
@@ -235,6 +235,29 @@ Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "hash_map.h"
 Path = "hash_map.h"
+Exclude = False
+Project Flags = 0
+Folder = "Include Files"
+
+[File 0021]
+File Type = "CSource"
+Res Id = 21
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ServerData.c"
+Path = "ServerData.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0022]
+File Type = "Include"
+Res Id = 22
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ServerData.h"
+Path = "ServerData.h"
 Exclude = False
 Project Flags = 0
 Folder = "Include Files"

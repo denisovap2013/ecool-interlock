@@ -59,12 +59,12 @@ int tcpConnection_SetBackgroundFunction(tcpConnection_ServerInterface_t * tcpSI,
 	return 0;
 }
 
-int tcpConnection_SetDataExchangeFunction(tcpConnection_ServerInterface_t * tcpSI, void (*dataExchangeFunc)(unsigned handle,void *arg))
+int tcpConnection_SetDataExchangeFunction(tcpConnection_ServerInterface_t * tcpSI, void (*dataExchangeFunc)(unsigned handle, char *ip))
 {
 	if (!tcpSI) 
 	{
 		logMessage("[CODE] /-/ tcpConnection_SetDataExchangeFunction /-/: Error! Wrong pointer of the server interface.");
-		return TCP_CONNECTION_ERROR; 
+		return TCP_CONNECTION_ERROR;
 	}
 	tcpSI->dataExchangeFunc = dataExchangeFunc;
 	return 0;	
