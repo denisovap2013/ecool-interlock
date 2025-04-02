@@ -1,6 +1,6 @@
 [Project Header]
 Version = 900
-Number of Files = 22
+Number of Files = 19
 Target Type = "Executable"
 Flags = 16
 Copied From Locked InstrDrv Directory = False
@@ -13,8 +13,8 @@ File Type = "CSource"
 Res Id = 1
 Path Is Rel = True
 Path Rel To = "Project"
-Path Rel Path = "ClientCommands.c"
-Path = "ClientCommands.c"
+Path Rel Path = "clientInterface.c"
+Path = "clientInterface.c"
 Exclude = False
 Compile Into Object File = False
 Project Flags = 0
@@ -25,43 +25,42 @@ File Type = "Include"
 Res Id = 2
 Path Is Rel = True
 Path Rel To = "Project"
-Path Rel Path = "ClientCommands.h"
-Path = "ClientCommands.h"
+Path Rel Path = "clientInterface.h"
+Path = "clientInterface.h"
 Exclude = False
 Project Flags = 0
 Folder = "Include Files"
 
 [File 0003]
-File Type = "Function Panel"
+File Type = "CSource"
 Res Id = 3
 Path Is Rel = True
-Path Rel To = "CVI"
-Path Rel To Override = "CVI"
-Path Rel Path = "toolslib/datasock/dataskt.fp"
-Path = "toolslib/datasock/dataskt.fp"
+Path Rel To = "Project"
+Path Rel Path = "ClientLogging.c"
+Path = "ClientLogging.c"
 Exclude = False
+Compile Into Object File = False
 Project Flags = 0
-Folder = "Instrument Files"
+Folder = "Source Files"
 
 [File 0004]
-File Type = "Function Panel"
+File Type = "Include"
 Res Id = 4
 Path Is Rel = True
-Path Rel To = "CVI"
-Path Rel To Override = "CVI"
-Path Rel Path = "toolslib/toolbox/inifile.fp"
-Path = "toolslib/toolbox/inifile.fp"
+Path Rel To = "Project"
+Path Rel Path = "ClientLogging.h"
+Path = "ClientLogging.h"
 Exclude = False
 Project Flags = 0
-Folder = "Instrument Files"
+Folder = "Include Files"
 
 [File 0005]
 File Type = "CSource"
 Res Id = 5
 Path Is Rel = True
 Path Rel To = "Project"
-Path Rel Path = "Logging.c"
-Path = "Logging.c"
+Path Rel Path = "conversation.c"
+Path = "conversation.c"
 Exclude = False
 Compile Into Object File = False
 Project Flags = 0
@@ -72,8 +71,8 @@ File Type = "Include"
 Res Id = 6
 Path Is Rel = True
 Path Rel To = "Project"
-Path Rel Path = "Logging.h"
-Path = "Logging.h"
+Path Rel Path = "conversation.h"
+Path = "conversation.h"
 Exclude = False
 Project Flags = 0
 Folder = "Include Files"
@@ -83,16 +82,50 @@ File Type = "CSource"
 Res Id = 7
 Path Is Rel = True
 Path Rel To = "Project"
-Path Rel Path = "main.c"
-Path = "main.c"
+Path Rel Path = "ECoolInterlockClient.c"
+Path = "ECoolInterlockClient.c"
 Exclude = False
 Compile Into Object File = False
 Project Flags = 0
 Folder = "Source Files"
 
 [File 0008]
-File Type = "CSource"
+File Type = "Include"
 Res Id = 8
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ECoolInterlockClient.h"
+Path = "ECoolInterlockClient.h"
+Exclude = False
+Project Flags = 0
+Folder = "Include Files"
+
+[File 0009]
+File Type = "User Interface Resource"
+Res Id = 9
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ECoolInterlockClient.uir"
+Path = "ECoolInterlockClient.uir"
+Exclude = False
+Project Flags = 0
+Folder = "User Interface Files"
+
+[File 0010]
+File Type = "Function Panel"
+Res Id = 10
+Path Is Rel = True
+Path Rel To = "CVI"
+Path Rel To Override = "CVI"
+Path Rel Path = "toolslib/toolbox/inifile.fp"
+Path = "toolslib/toolbox/inifile.fp"
+Exclude = False
+Project Flags = 0
+Folder = "Instrument Files"
+
+[File 0011]
+File Type = "CSource"
+Res Id = 11
 Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "MessageStack.c"
@@ -102,9 +135,9 @@ Compile Into Object File = False
 Project Flags = 0
 Folder = "Source Files"
 
-[File 0009]
+[File 0012]
 File Type = "Include"
-Res Id = 9
+Res Id = 12
 Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "MessageStack.h"
@@ -113,78 +146,9 @@ Exclude = False
 Project Flags = 0
 Folder = "Include Files"
 
-[File 0010]
-File Type = "CSource"
-Res Id = 10
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "ModBusUbs.c"
-Path = "ModBusUbs.c"
-Exclude = False
-Compile Into Object File = False
-Project Flags = 0
-Folder = "Source Files"
-
-[File 0011]
-File Type = "Include"
-Res Id = 11
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "ModBusUbs.h"
-Path = "ModBusUbs.h"
-Exclude = False
-Project Flags = 0
-Folder = "Include Files"
-
-[File 0012]
-File Type = "CSource"
-Res Id = 12
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "ServerConfigData.c"
-Path = "ServerConfigData.c"
-Exclude = False
-Compile Into Object File = False
-Project Flags = 0
-Folder = "Source Files"
-
 [File 0013]
-File Type = "Include"
+File Type = "CSource"
 Res Id = 13
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "ServerConfigData.h"
-Path = "ServerConfigData.h"
-Exclude = False
-Project Flags = 0
-Folder = "Include Files"
-
-[File 0014]
-File Type = "CSource"
-Res Id = 14
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "TCP_Connection.c"
-Path = "TCP_Connection.c"
-Exclude = False
-Compile Into Object File = False
-Project Flags = 0
-Folder = "Source Files"
-
-[File 0015]
-File Type = "Include"
-Res Id = 15
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "TCP_Connection.h"
-Path = "TCP_Connection.h"
-Exclude = False
-Project Flags = 0
-Folder = "Include Files"
-
-[File 0016]
-File Type = "CSource"
-Res Id = 16
 Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "TimeMarkers.c"
@@ -194,9 +158,9 @@ Compile Into Object File = False
 Project Flags = 0
 Folder = "Source Files"
 
-[File 0017]
+[File 0014]
 File Type = "Include"
-Res Id = 17
+Res Id = 14
 Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "TimeMarkers.h"
@@ -205,68 +169,70 @@ Exclude = False
 Project Flags = 0
 Folder = "Include Files"
 
+[File 0015]
+File Type = "CSource"
+Res Id = 15
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ubsClientConfiguration.c"
+Path Line0001 = "ubsClientConfiguratio"
+Path Line0002 = "n.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0016]
+File Type = "Include"
+Res Id = 16
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ubsClientConfiguration.h"
+Path Line0001 = "ubsClientConfiguratio"
+Path Line0002 = "n.h"
+Exclude = False
+Project Flags = 0
+Folder = "Include Files"
+
+[File 0017]
+File Type = "CSource"
+Res Id = 17
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "UbsData.c"
+Path = "UbsData.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
 [File 0018]
+File Type = "Include"
+Res Id = 18
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "UbsData.h"
+Path = "UbsData.h"
+Exclude = False
+Project Flags = 0
+Folder = "Include Files"
+
+[File 0019]
 File Type = "Unknown"
 Res Id = 18
 Path Is Rel = True
 Path Rel To = "Project"
-Path Rel Path = "ecool-interlock-server-config.ini"
-Path = "ecool-interlock-server-config.ini"
+Path Rel Path = "ecool-interlock-client-config.ini"
+Path = "ecool-interlock-client-config.ini"
 Exclude = False
 Project Flags = 0
 Folder = "Not In A Folder"
 
-[File 0019]
-File Type = "CSource"
-Res Id = 19
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "hash_map.c"
-Path = "hash_map.c"
-Exclude = False
-Compile Into Object File = False
-Project Flags = 0
-Folder = "Source Files"
-
-[File 0020]
-File Type = "Include"
-Res Id = 20
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "hash_map.h"
-Path = "hash_map.h"
-Exclude = False
-Project Flags = 0
-Folder = "Include Files"
-
-[File 0021]
-File Type = "CSource"
-Res Id = 21
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "ServerData.c"
-Path = "ServerData.c"
-Exclude = False
-Compile Into Object File = False
-Project Flags = 0
-Folder = "Source Files"
-
-[File 0022]
-File Type = "Include"
-Res Id = 22
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "ServerData.h"
-Path = "ServerData.h"
-Exclude = False
-Project Flags = 0
-Folder = "Include Files"
-
 [Folders]
-User Interface Files Folder Not Added Yet = True
-Folder 0 = "Source Files"
-Folder 1 = "Include Files"
-Folder 2 = "Instrument Files"
+Folder 0 = "User Interface Files"
+Folder 1 = "Source Files"
+Folder 2 = "Include Files"
+Folder 3 = "Instrument Files"
 
 [Compiler Options]
 Default Calling Convention = "cdecl"
@@ -292,23 +258,19 @@ Compiler Defines = ""
 [Create Executable]
 Executable File_Debug Is Rel = True
 Executable File_Debug Rel To = "Project"
-Executable File_Debug Rel Path = "E-Cool Interlock Server debug.exe"
-Executable File_Debug = "E-Cool Interlock Server debug.exe"
+Executable File_Debug Rel Path = "E-Cool Interlock Client debug.exe"
+Executable File_Debug = "E-Cool Interlock Client debug.exe"
 Executable File_Release Is Rel = True
 Executable File_Release Rel To = "Project"
-Executable File_Release Rel Path = "E-Cool Interlock Server.exe"
-Executable File_Release = "E-Cool Interlock Server.exe"
-Executable File_Debug64 Is Rel = True
-Executable File_Debug64 Rel To = "Project"
-Executable File_Debug64 Rel Path = "E-Cool Interlock Server debug.exe"
-Executable File_Debug64 = "E-Cool Interlock Server debug.exe"
-Executable File_Release64 Is Rel = True
-Executable File_Release64 Rel To = "Project"
-Executable File_Release64 Rel Path = "E-Cool Interlock Server debug.exe"
-Executable File_Release64 = "E-Cool Interlock Server debug.exe"
+Executable File_Release Rel Path = "E-Cool Interlock Client.exe"
+Executable File_Release = "E-Cool Interlock Client.exe"
+Executable File_Debug64 Is Rel = False
+Executable File_Debug64 = "E-Cool Interlock Client debug.exe"
+Executable File_Release64 Is Rel = False
+Executable File_Release64 = "E-Cool Interlock Client.exe"
 Icon File Is Rel = False
 Icon File = ""
-Application Title = "E-Cool Interlock Server"
+Application Title = ""
 DLL Exports = "Include File Symbols"
 DLL Import Library Choice = "Gen Lib For Current Mode"
 Use IVI Subdirectories for Import Libraries = False
@@ -324,7 +286,7 @@ Type Lib FP File = ""
 Type Lib Guid = ""
 Runtime Support = "Full Runtime Support"
 Instrument Driver Support Only = False
-Embed Project .UIRs = True
+Embed Project .UIRs = False
 Generate Map File = False
 
 [External Compiler Support]
