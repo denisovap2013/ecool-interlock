@@ -32,16 +32,15 @@ Project Flags = 0
 Folder = "Include Files"
 
 [File 0003]
-File Type = "Function Panel"
+File Type = "Unknown"
 Res Id = 3
 Path Is Rel = True
-Path Rel To = "CVI"
-Path Rel To Override = "CVI"
-Path Rel Path = "toolslib/datasock/dataskt.fp"
-Path = "toolslib/datasock/dataskt.fp"
+Path Rel To = "Project"
+Path Rel Path = "ecool-interlock-server-config.ini"
+Path = "ecool-interlock-server-config.ini"
 Exclude = False
 Project Flags = 0
-Folder = "Instrument Files"
+Folder = "Not In A Folder"
 
 [File 0004]
 File Type = "Function Panel"
@@ -206,19 +205,8 @@ Project Flags = 0
 Folder = "Include Files"
 
 [File 0018]
-File Type = "Unknown"
-Res Id = 18
-Path Is Rel = True
-Path Rel To = "Project"
-Path Rel Path = "ecool-interlock-server-config.ini"
-Path = "ecool-interlock-server-config.ini"
-Exclude = False
-Project Flags = 0
-Folder = "Not In A Folder"
-
-[File 0019]
 File Type = "CSource"
-Res Id = 19
+Res Id = 18
 Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "hash_map.c"
@@ -228,9 +216,9 @@ Compile Into Object File = False
 Project Flags = 0
 Folder = "Source Files"
 
-[File 0020]
+[File 0019]
 File Type = "Include"
-Res Id = 20
+Res Id = 19
 Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "hash_map.h"
@@ -239,9 +227,9 @@ Exclude = False
 Project Flags = 0
 Folder = "Include Files"
 
-[File 0021]
+[File 0020]
 File Type = "CSource"
-Res Id = 21
+Res Id = 20
 Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "ServerData.c"
@@ -251,9 +239,9 @@ Compile Into Object File = False
 Project Flags = 0
 Folder = "Source Files"
 
-[File 0022]
+[File 0021]
 File Type = "Include"
-Res Id = 22
+Res Id = 21
 Path Is Rel = True
 Path Rel To = "Project"
 Path Rel Path = "ServerData.h"
