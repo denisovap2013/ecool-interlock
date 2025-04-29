@@ -2,8 +2,8 @@
 //
 //==============================================================================
 
-#ifndef __ubsClientConfiguration_H__
-#define __ubsClientConfiguration_H__
+#ifndef __clientConfiguration_H__
+#define __clientConfiguration_H__
 
 
 //==============================================================================
@@ -31,4 +31,4 @@ extern unsigned short CFG_DQ_MASKS[3];
 
 void ConfigurateClient(char * configPath);
 
-#endif  /* ndef __ubsClientConfiguration_H__ */
+#endif  /* ndef __clientConfiguration_H__ */

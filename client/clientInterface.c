@@ -20,7 +20,7 @@
 #include "UbsData.h"
 #include "TimeMarkers.h"
 #include "MessageStack.h"
-#include "ubsClientConfiguration.h"
+#include "clientConfiguration.h"
 #include "conversation.h" 
 
 //==============================================================================

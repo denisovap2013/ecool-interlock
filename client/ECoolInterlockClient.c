@@ -9,11 +9,10 @@
 
 #include "TimeMarkers.h"
 #include "MessageStack.h"
-#include "ubsClientConfiguration.h"
+#include "clientConfiguration.h"
 
 #include "clientInterface.h"
 #include "ECoolInterlockClient.h"
-#include "ubsClientConfiguration.h"  
 #include "conversation.h"
 #include "ClientLogging.h"  
 

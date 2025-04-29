@@ -4,7 +4,7 @@
 
 #include "inifile.h"
 #include <ansi_c.h>
-#include "ubsClientConfiguration.h"
+#include "clientConfiguration.h"
 
 char CFG_SERVER_IP[256];
 unsigned int CFG_SERVER_PORT;
