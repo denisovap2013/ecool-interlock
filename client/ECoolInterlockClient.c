@@ -107,7 +107,7 @@ void DiscardAllResources(void) {
 
 
 int initConnectionToServer(void) {
-	return ConnectToTCPServer(&serverHandle,SERVER_PORT,SERVER_IP,clientCallbackFunction,NULL,100);	
+	return ConnectToTCPServer(&serverHandle, CFG_SERVER_PORT, CFG_SERVER_IP, clientCallbackFunction, NULL, 100);	
 }
 
 
@@ -238,7 +238,7 @@ void createInfoFile(void) {
 	msAddMsg(messageStack, "  08: ADC-3");
 	msAddMsg(messageStack, "  09: DAC-0");
 	
-	WriteDataDescription(messageStack, DATA_DIRECTORY, infoFileName);
+	WriteDataDescription(messageStack, CFG_DATA_DIRECTORY, infoFileName);
 }
 
 
@@ -304,7 +304,7 @@ int PrepareUbsDataRequestOnSchedule(void) {
 	
 	if (hasSameGlobalRequestsRecordID(UBS_CMD_GET_ALLVALUES_ID)) return 0;
 
-	if (ubsRequestWaitingTics * TIMER_TICK_TIME >= UBS_REQUEST_RATE) {
+	if (ubsRequestWaitingTics * TIMER_TICK_TIME >= CFG_UBS_REQUEST_RATE) {
 		sprintf(command,"%s\n", UBS_CMD_GET_ALLVALUES); 
 
 		if (appendGlobalRequestQueueRecord(UBS_CMD_GET_ALLVALUES_ID, command, NULL)) {
@@ -327,9 +327,9 @@ int WriteDataFilesOnSchedule(void) {
 
 	if (!connectionEstablished) return 0;
 	
-	if (dataLogWaitingTics * TIMER_TICK_TIME >= DATA_WRITE_INTERVAL) {
+	if (dataLogWaitingTics * TIMER_TICK_TIME >= CFG_DATA_WRITE_INTERVAL) {
 		assembleDataForLogging(data);
-		WriteDataFiles(data, DATA_DIRECTORY, dataFileName);
+		WriteDataFiles(data, CFG_DATA_DIRECTORY, dataFileName);
 		dataLogWaitingTics = 0;
 		return 1;
 	} else {
@@ -417,14 +417,14 @@ int CVICALLBACK graphVerticalRange (int panel, int control, int event,
 	switch (event)
 	{
 		case EVENT_COMMIT:
-			GetCtrlVal(panel,Graph_maxValue,&ymax);
-			GetCtrlVal(panel,Graph_minValue,&ymin);
+			GetCtrlVal(panel, Graph_maxValue, &ymax);
+			GetCtrlVal(panel, Graph_minValue, &ymin);
 			if (ymax < ymin)  {
 				buf = ymax;
 				ymax = ymin;
 				ymin = buf;
-				SetCtrlVal(panel,Graph_maxValue,ymax);
-				SetCtrlVal(panel,Graph_minValue,ymin);
+				SetCtrlVal(panel, Graph_maxValue, ymax);
+				SetCtrlVal(panel, Graph_minValue, ymin);
 			}
 			
 			if (ymax == ymin) {
@@ -478,22 +478,22 @@ int  CVICALLBACK clearPlotCallback(int panel, int control, int event,
 int CVICALLBACK graphPanelCallback (int panel, int event, void *callbackData,
 		int eventData1, int eventData2)
 {
-	int i,j;
-	int h,w;
+	int i, j;
+	int h, w;
 	switch (event) {
 		case EVENT_PANEL_SIZE:  
-			GetPanelAttribute(panel,ATTR_HEIGHT,&h);
-			if (h<150) SetPanelAttribute(panel,ATTR_HEIGHT,150);
-			GetPanelAttribute(panel,ATTR_WIDTH,&w);
-			if (w<300) SetPanelAttribute(panel,ATTR_WIDTH,300);
+			GetPanelAttribute(panel, ATTR_HEIGHT, &h);
+			if (h<150) SetPanelAttribute(panel, ATTR_HEIGHT, 150);
+			GetPanelAttribute(panel, ATTR_WIDTH, &w);
+			if (w<300) SetPanelAttribute(panel, ATTR_WIDTH, 300);
 		case EVENT_PANEL_SIZING:
 			
-			GetPanelAttribute(panel,ATTR_WIDTH,&w);
-			GetPanelAttribute(panel,ATTR_HEIGHT,&h);
-			SetCtrlAttribute(panel,Graph_GRAPH,ATTR_WIDTH, w-113);
-			SetCtrlAttribute(panel,Graph_GRAPH,ATTR_HEIGHT, h - 30); 
-			SetCtrlAttribute(panel,Graph_currentValue,ATTR_TOP,h/2); 
-			SetCtrlAttribute(panel,Graph_minValue,ATTR_TOP,h-30);
+			GetPanelAttribute(panel, ATTR_WIDTH, &w);
+			GetPanelAttribute(panel, ATTR_HEIGHT, &h);
+			SetCtrlAttribute(panel, Graph_GRAPH,ATTR_WIDTH, w-113);
+			SetCtrlAttribute(panel, Graph_GRAPH,ATTR_HEIGHT, h - 30); 
+			SetCtrlAttribute(panel, Graph_currentValue,ATTR_TOP, h/2); 
+			SetCtrlAttribute(panel, Graph_minValue,ATTR_TOP, h-30);
 			break;
 		case EVENT_CLOSE:
 			DiscardPanel(panel);
@@ -542,10 +542,10 @@ int CVICALLBACK tick (int panel, int control, int event,
 			} else {
 				// Trying to reconnect
 				connectionWaitTics++;
-				if (connectionWaitTics * TIMER_TICK_TIME >= SERVER_CONNECTION_INTERVAL) {
+				if (connectionWaitTics * TIMER_TICK_TIME >= CFG_SERVER_CONNECTION_INTERVAL) {
 					connectionWaitTics = 0;
 
-					msAddMsg(msGMS(), "%s Connection to the server (\"%s:%d\") ...", TimeStamp(0), SERVER_IP, SERVER_PORT);
+					msAddMsg(msGMS(), "%s Connection to the server (\"%s:%d\") ...", TimeStamp(0), CFG_SERVER_IP, CFG_SERVER_PORT);
 					if (initConnectionToServer() >= 0) {
 						connectionEstablished = 1;
 						RequestNames();
@@ -559,12 +559,12 @@ int CVICALLBACK tick (int panel, int control, int event,
 						SetCtrlAttribute(mainPanelHandle, clientToServerConnectionLED, ATTR_LABEL_TEXT, "Clinet-Server: online");
 						msAddMsg(msGMS(), "%s Connection to the server is established.", TimeStamp(0));
 					} else {
-						msAddMsg(msGMS(), "%s Connection to the server failed. Next connection request in %.1fs.", TimeStamp(0), SERVER_CONNECTION_INTERVAL);
+						msAddMsg(msGMS(), "%s Connection to the server failed. Next connection request in %.1fs.", TimeStamp(0), CFG_SERVER_CONNECTION_INTERVAL);
 					}
 				}
 			}
 			if (msMsgsAvailable(msGMS())) {
-				WriteLogFiles(msGMS(), LOG_DIRECTORY, logFileName);
+				WriteLogFiles(msGMS(), CFG_LOG_DIRECTORY, logFileName);
 				msFlushMsgs(msGMS());
 			}
 			break;
@@ -586,7 +586,7 @@ int clientCallbackFunction(unsigned handle, int xType, int errCode, void * callb
 			
 			SetCtrlVal(mainPanelHandle, clientToServerConnectionLED, 0);
 			SetCtrlAttribute(mainPanelHandle, clientToServerConnectionLED, ATTR_LABEL_TEXT, "Clinet-Server: offline");
-			msAddMsg(msGMS(), "%s Connection to the server has lost. Next connection request in %.1fs.", TimeStamp(0), SERVER_CONNECTION_INTERVAL);
+			msAddMsg(msGMS(), "%s Connection to the server has lost. Next connection request in %.1fs.", TimeStamp(0), CFG_SERVER_CONNECTION_INTERVAL);
 			break;
 		case TCP_DATAREADY:
 			bytesRecv = ClientTCPRead(handle, message, sizeof(message) - 1, 100);
@@ -680,7 +680,7 @@ int main (int argc, char *argv[])
 	msAddMsg(msGMS(), "-------------\n[NEW SESSION]\n-------------");
 	
 	// Force the app to connect to the server immediately  
-	connectionWaitTics = SERVER_CONNECTION_INTERVAL / TIMER_TICK_TIME;  
+	connectionWaitTics = CFG_SERVER_CONNECTION_INTERVAL / TIMER_TICK_TIME;  
     
     /* initialize and load resources */
     nullChk (InitCVIRTE (0, argv, 0));
@@ -696,7 +696,7 @@ int main (int argc, char *argv[])
     /* display the panel and run the user interface */
 	InstallMainCallback(mainSystemCallback, 0, 0); 
 	
-    errChk (DisplayPanel (mainPanelHandle));
+    errChk (DisplayPanel(mainPanelHandle));
     errChk (RunUserInterface());
 
 Error:

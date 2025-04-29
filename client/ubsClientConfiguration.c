@@ -6,21 +6,20 @@
 #include <ansi_c.h>
 #include "ubsClientConfiguration.h"
 
-char SERVER_IP[256];
-unsigned int SERVER_PORT;
-double SERVER_CONNECTION_INTERVAL;
-double UBS_REQUEST_RATE;
+char CFG_SERVER_IP[256];
+unsigned int CFG_SERVER_PORT;
+double CFG_SERVER_CONNECTION_INTERVAL;
+double CFG_UBS_REQUEST_RATE;
 
 
-char LOG_DIRECTORY[256];
-char DATA_DIRECTORY[256];
-double  DATA_WRITE_INTERVAL;
+char CFG_LOG_DIRECTORY[256];
+char CFG_DATA_DIRECTORY[256];
+double CFG_DATA_WRITE_INTERVAL;
 
-unsigned int DI_MASKS[2];
-unsigned short DQ_MASKS[3]; 
+unsigned int CFG_DI_MASKS[2];
+unsigned short CFG_DQ_MASKS[3]; 
 
 
-#define STOP_CONFIGURATION(x) MessagePopup("Configuration Error", (x)); Ini_Dispose(iniText); exit(0); 
 #define BUF_SIZE 256
 
 
@@ -29,75 +28,63 @@ void ConfigurateClient(char * configPath) {
 	char strBuf[256], key[256], errorMsg[256];
 	
 	IniText iniText;
-	if (!configPath) {
-		STOP_CONFIGURATION("Configuration file path is NULL.");
-	} 
-	
+
+	#define INFORM_AND_STOP(msg) MessagePopup("Configuration Error", (msg)); Ini_Dispose(iniText); exit(0);
+	#define STOP_CONFIGURATION(s, k) sprintf(errorMsg, "Cannot read '%s' from the '%s' section. (Line: %d)", (k), (s), Ini_LineOfLastAccess(iniText)); INFORM_AND_STOP(errorMsg);  
+	#define READ_STRING(s, k, var) if(Ini_GetStringIntoBuffer(iniText, (s), (k), (var), sizeof((var))) <= 0) {STOP_CONFIGURATION((s), (k));} 
+	#define READ_INT(s, k, var) if(Ini_GetInt(iniText, (s), (k), &(var)) <= 0) {STOP_CONFIGURATION((s), (k));}
+	#define READ_DOUBLE(s, k, var) if(Ini_GetDouble(iniText, (s), (k), &(var)) <= 0) {STOP_CONFIGURATION((s), (k));}
+
 	iniText = Ini_New(1);
+
+	if (!configPath) {
+		INFORM_AND_STOP("Configuration file path is NULL.");
+	}
 	
-	if( Ini_ReadFromFile(iniText,configPath) < 0 ) {
-		STOP_CONFIGURATION("Cannot read the config file.");
-	} 
+	if( Ini_ReadFromFile(iniText, configPath) < 0 ) {
+		sprintf(errorMsg, "Unable to read the configuration file '%s'.", configPath);
+		INFORM_AND_STOP(errorMsg);
+	}
+
 	////////////////////////////
-	// FILE
-			// LOG
-	if(Ini_GetStringIntoBuffer(iniText, "FILE", "logDir", LOG_DIRECTORY, BUF_SIZE) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'logDir' from the 'FILE' section.");  
-	}
-			// DATA
-	if(Ini_GetStringIntoBuffer(iniText, "FILE", "dataDir", DATA_DIRECTORY, BUF_SIZE) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'dataDir' from the 'FILE' section.");
-	}
-			// WRITE INTERVAL
-	if(Ini_GetDouble(iniText, "FILE", "dataWriteInterval", &DATA_WRITE_INTERVAL) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'dataWriteInterval' from the 'FILE' section.");
-	}
+	// == FILE ==
+	// LOG
+	READ_STRING("FILE", "logDir", CFG_LOG_DIRECTORY);
+	// DATA
+	READ_STRING("FILE", "dataDir", CFG_DATA_DIRECTORY);
+	// WRITE INTERVAL
+	READ_DOUBLE("FILE", "dataWriteInterval", CFG_DATA_WRITE_INTERVAL);
 	
-	// SERVER
-			// IP
-	if(Ini_GetStringIntoBuffer(iniText, "TCP", "serverIp", SERVER_IP, BUF_SIZE) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'serverIp' from the 'TCP' section."); 
-	}
-			// Port
-	if(Ini_GetInt(iniText, "TCP", "serverPort", &SERVER_PORT) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'serverPort' from the 'TCP' section.");
-	}
-			// UBS REQUEST RATE
-	if(Ini_GetDouble(iniText, "TCP", "request", &UBS_REQUEST_RATE) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'request' from the 'TCP' section."); 
-	}
-			// UBS CONNECTION INTERVAL
-	if(Ini_GetDouble(iniText, "TCP", "connection", &SERVER_CONNECTION_INTERVAL) <= 0) {
-		STOP_CONFIGURATION("Cannot read 'connection' from the 'TCP' section.");
-	}
+	// == SERVER ==
+	// IP
+	READ_STRING("TCP", "serverIp", CFG_SERVER_IP);
+	// Port
+	READ_INT("TCP", "serverPort", CFG_SERVER_PORT);
+	// UBS REQUEST RATE
+	READ_DOUBLE("TCP", "request", CFG_UBS_REQUEST_RATE);
+	// UBS CONNECTION INTERVAL
+	READ_DOUBLE("TCP", "connection", CFG_SERVER_CONNECTION_INTERVAL);
 	
-	// 
-	
+	// == MASKS ==
 	// DI MASKS
 	for (i=0; i<2; i++) {
 		sprintf(key, "di%d_mask", i);
-		if(Ini_GetStringIntoBuffer(iniText, "MASKS", key, strBuf, BUF_SIZE) <= 0) {
-			sprintf(errorMsg, "Cannot read '%s' from the 'MASKS' section.", key);
-			STOP_CONFIGURATION(errorMsg);
-		}
+		READ_STRING("MASKS", key, strBuf);
 		
-		if (sscanf(strBuf, "%X", &DI_MASKS[i]) < 1) {
+		if (sscanf(strBuf, "%X", &CFG_DI_MASKS[i]) < 1) {
 			sprintf(errorMsg, "Unable to parse the hex code (%s) for '%s' from the 'MASKS' section.", strBuf, key);
-			STOP_CONFIGURATION(errorMsg);	
+			INFORM_AND_STOP(errorMsg);	
 		}
 	}
 	
 	// DQ MASKS
 	for (i=0; i<3; i++) {
 		sprintf(key, "dq%d_mask", i);
-		if(Ini_GetStringIntoBuffer(iniText, "MASKS", key, strBuf, BUF_SIZE) <= 0) {
-			sprintf(errorMsg, "Cannot read '%s' from the 'MASKS' section.", key);
-			STOP_CONFIGURATION(errorMsg);
-		}
+		READ_STRING("MASKS", key, strBuf);
 		
-		if (sscanf(strBuf, "%hX", &DQ_MASKS[i]) < 1) {
+		if (sscanf(strBuf, "%hX", &CFG_DQ_MASKS[i]) < 1) {
 			sprintf(errorMsg, "Unable to parse the hex code (%s) for '%s' from the 'MASKS' section.", strBuf, key);
-			STOP_CONFIGURATION(errorMsg);	
+			INFORM_AND_STOP(errorMsg);	
 		}
 	}
 	////////////////////////////

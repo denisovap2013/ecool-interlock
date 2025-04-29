@@ -375,7 +375,7 @@ int setupBlocksPanels(void) {
 			SetCtrlAttribute(diPanelHandles[i], diIndicatorsHandles[i][j], ATTR_LABEL_TOP, yPos);  
 			SetCtrlAttribute(diPanelHandles[i], diIndicatorsHandles[i][j], ATTR_LABEL_LEFT, 30); 
 			
-			if (DI_MASKS[i] & (1 << j)) {
+			if (CFG_DI_MASKS[i] & (1 << j)) {
 				SetCtrlAttribute(diPanelHandles[i], diIndicatorsHandles[i][j], ATTR_OFF_COLOR, LED_RED_COLOR);
 				SetCtrlAttribute(diPanelHandles[i], diIndicatorsHandles[i][j], ATTR_ON_COLOR, LED_GREEN_COLOR);	
 			} else {
@@ -400,7 +400,7 @@ int setupBlocksPanels(void) {
 			SetCtrlAttribute(dqPanelHandles[i], dqIndicatorsHandles[i][j], ATTR_OFF_COLOR, LED_RED_COLOR);
 			SetCtrlAttribute(dqPanelHandles[i], dqIndicatorsHandles[i][j], ATTR_ON_COLOR, LED_GREEN_COLOR);
 			
-			if (DQ_MASKS[i] & (1 << (j * 2))) {
+			if (CFG_DQ_MASKS[i] & (1 << (j * 2))) {
 				SetCtrlAttribute(dqPanelHandles[i], dqIndicatorsHandles[i][j], ATTR_OFF_COLOR, LED_RED_COLOR);
 				SetCtrlAttribute(dqPanelHandles[i], dqIndicatorsHandles[i][j], ATTR_ON_COLOR, LED_GREEN_COLOR);	
 			} else {
@@ -479,7 +479,7 @@ int setupEventsPanel(void) {
 			SetCtrlAttribute(eventPanelHandle, diEventsIndicatorsHandles[i][j], ATTR_LABEL_TOP, yPos);  
 			SetCtrlAttribute(eventPanelHandle, diEventsIndicatorsHandles[i][j], ATTR_LABEL_LEFT, xPos + 25); 
 			
-			if (DI_MASKS[i] & (1 << j)) {
+			if (CFG_DI_MASKS[i] & (1 << j)) {
 				SetCtrlAttribute(eventPanelHandle, diEventsIndicatorsHandles[i][j], ATTR_OFF_COLOR, LED_RED_COLOR);
 				SetCtrlAttribute(eventPanelHandle, diEventsIndicatorsHandles[i][j], ATTR_ON_COLOR, LED_GREEN_COLOR);	
 			} else {
@@ -508,7 +508,7 @@ int setupEventsPanel(void) {
 			SetCtrlAttribute(eventPanelHandle, dqEventsIndicatorsHandles[i][j], ATTR_OFF_COLOR, LED_RED_COLOR);
 			SetCtrlAttribute(eventPanelHandle, dqEventsIndicatorsHandles[i][j], ATTR_ON_COLOR, LED_GREEN_COLOR);
 			
-			if (DQ_MASKS[i] & (1 << (j * 2))) {
+			if (CFG_DQ_MASKS[i] & (1 << (j * 2))) {
 				SetCtrlAttribute(eventPanelHandle, dqEventsIndicatorsHandles[i][j], ATTR_OFF_COLOR, LED_RED_COLOR);
 				SetCtrlAttribute(eventPanelHandle, dqEventsIndicatorsHandles[i][j], ATTR_ON_COLOR, LED_GREEN_COLOR);	
 			} else {
@@ -733,13 +733,13 @@ void UpdateAllValues(void) {
 			SetCtrlVal(diPanelHandles[i], diIndicatorsHandles[i][j], DI_VALUES[i] & (1 << j)); 
 		}
 		
-		if (DI_VALUES[i] == DI_MASKS[i]) {
-			if (DI_MASKS[i] == 0)
+		if (DI_VALUES[i] == CFG_DI_MASKS[i]) {
+			if (CFG_DI_MASKS[i] == 0)
 				SetCtrlAttribute(mainPanelHandle, diPanelCallButtons[i], ATTR_CMD_BUTTON_COLOR, BTN_GRAY_COLOR);
 			else
 				SetCtrlAttribute(mainPanelHandle, diPanelCallButtons[i], ATTR_CMD_BUTTON_COLOR, BTN_GREEN_COLOR); 
 	
-		} else if ((DI_VALUES[i] & DI_MASKS[i]) == DI_MASKS[i]) {
+		} else if ((DI_VALUES[i] & CFG_DI_MASKS[i]) == CFG_DI_MASKS[i]) {
 			SetCtrlAttribute(mainPanelHandle, diPanelCallButtons[i], ATTR_CMD_BUTTON_COLOR, BTN_YELLOW_COLOR);	
 		} else {
 			SetCtrlAttribute(mainPanelHandle, diPanelCallButtons[i], ATTR_CMD_BUTTON_COLOR, BTN_RED_COLOR); 	
@@ -754,13 +754,13 @@ void UpdateAllValues(void) {
 			SetCtrlVal(dqPanelHandles[i], dqIndicatorsHandles[i][j], DQ_VALUES[i] & (1 << (j * 2)));
 		}
 		
-		if (DQ_VALUES[i] == DQ_MASKS[i]) {
-			if (DQ_MASKS[i] == 0)
+		if (DQ_VALUES[i] == CFG_DQ_MASKS[i]) {
+			if (CFG_DQ_MASKS[i] == 0)
 				SetCtrlAttribute(mainPanelHandle, dqPanelCallButtons[i], ATTR_CMD_BUTTON_COLOR, BTN_GRAY_COLOR);
 			else
 				SetCtrlAttribute(mainPanelHandle, dqPanelCallButtons[i], ATTR_CMD_BUTTON_COLOR, BTN_GREEN_COLOR);  
 
-		} else if ((DQ_VALUES[i] & DQ_MASKS[i]) == DQ_MASKS[i]) {
+		} else if ((DQ_VALUES[i] & CFG_DQ_MASKS[i]) == CFG_DQ_MASKS[i]) {
 			SetCtrlAttribute(mainPanelHandle, dqPanelCallButtons[i], ATTR_CMD_BUTTON_COLOR, BTN_YELLOW_COLOR);	
 		} else {
 			SetCtrlAttribute(mainPanelHandle, dqPanelCallButtons[i], ATTR_CMD_BUTTON_COLOR, BTN_RED_COLOR); 	

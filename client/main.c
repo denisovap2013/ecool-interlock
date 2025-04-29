@@ -407,24 +407,24 @@ void prepareTimeSchedule(void) {
 	reconnectionRequestId = addRecordToSchedule(1,1,CANGW_RECONNECTION_DELAY,serverReconnection);
 
 #ifndef NO_CAN_EXCHANGE
-	addRecordToSchedule(1,1,UBS_DEVICE_PING_INTERVAL,deviceCedioRequest);
-	addRecordToSchedule(1,0,30,adcStatusRequest); 
+	addRecordToSchedule(1, 1, UBS_DEVICE_PING_INTERVAL, deviceCedioRequest);
+	addRecordToSchedule(1, 0, 30, adcStatusRequest); 
 #endif
 	
 #endif
 	
-	addRecordToSchedule(1,0,FILE_DATA_WRITE_INTERVAL,adcFileWrite);  
-	addRecordToSchedule(1,1,60*60*24,deleteOldFiles);     
+	addRecordToSchedule(1, 0, FILE_DATA_WRITE_INTERVAL, adcFileWrite);  
+	addRecordToSchedule(1, 1, 60*60*24, deleteOldFiles);     
 	
 #ifndef NO_CAN
 #ifndef NO_CAN_EXCHANGE
-	deviceXtimeoutHandle[UBS_ADC_PORT]    = addRecordToSchedule(1,0,UBS_DEVICE_RESPONSE_TIMEOUT,deviceADCtimeout); 
-	deviceXtimeoutHandle[UBS_BIT_PORT[0]] = addRecordToSchedule(1,0,UBS_DEVICE_RESPONSE_TIMEOUT,deviceBIT0timeout); 
-	deviceXtimeoutHandle[UBS_BIT_PORT[1]] = addRecordToSchedule(1,0,UBS_DEVICE_RESPONSE_TIMEOUT,deviceBIT1timeout); 
-	deviceXtimeoutHandle[UBS_BIT_PORT[2]] = addRecordToSchedule(1,0,UBS_DEVICE_RESPONSE_TIMEOUT,deviceBIT2timeout); 
-	deviceXtimeoutHandle[UBS_BIT_PORT[3]] = addRecordToSchedule(1,0,UBS_DEVICE_RESPONSE_TIMEOUT,deviceBIT3timeout); 
-	deviceXtimeoutHandle[UBS_BIT_PORT[4]] = addRecordToSchedule(1,0,UBS_DEVICE_RESPONSE_TIMEOUT,deviceBIT4timeout); 
-	deviceXtimeoutHandle[UBS_BIT_PORT[5]] = addRecordToSchedule(1,0,UBS_DEVICE_RESPONSE_TIMEOUT,deviceBIT5timeout); 
+	deviceXtimeoutHandle[UBS_ADC_PORT]    = addRecordToSchedule(1, 0, UBS_DEVICE_RESPONSE_TIMEOUT, deviceADCtimeout); 
+	deviceXtimeoutHandle[UBS_BIT_PORT[0]] = addRecordToSchedule(1, 0, UBS_DEVICE_RESPONSE_TIMEOUT, deviceBIT0timeout); 
+	deviceXtimeoutHandle[UBS_BIT_PORT[1]] = addRecordToSchedule(1, 0, UBS_DEVICE_RESPONSE_TIMEOUT, deviceBIT1timeout); 
+	deviceXtimeoutHandle[UBS_BIT_PORT[2]] = addRecordToSchedule(1, 0, UBS_DEVICE_RESPONSE_TIMEOUT, deviceBIT2timeout); 
+	deviceXtimeoutHandle[UBS_BIT_PORT[3]] = addRecordToSchedule(1, 0, UBS_DEVICE_RESPONSE_TIMEOUT, deviceBIT3timeout); 
+	deviceXtimeoutHandle[UBS_BIT_PORT[4]] = addRecordToSchedule(1, 0, UBS_DEVICE_RESPONSE_TIMEOUT, deviceBIT4timeout); 
+	deviceXtimeoutHandle[UBS_BIT_PORT[5]] = addRecordToSchedule(1, 0, UBS_DEVICE_RESPONSE_TIMEOUT, deviceBIT5timeout); 
 #endif
 #endif
 /**/
