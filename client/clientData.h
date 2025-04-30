@@ -1,15 +1,5 @@
-//==============================================================================
-//
-// Title:       UbsData.h
-// Purpose:     A short description of the interface.
-//
-// Created on:  22.12.2020 at 13:20:37 by Vasya.
-// Copyright:   Laboratory of anomalous materials. All Rights Reserved.
-//
-//==============================================================================
-
-#ifndef __UbsData_H__
-#define __UbsData_H__
+#ifndef __clientData_H__
+#define __clientData_H__
 
 #ifdef __cplusplus
     extern "C" {
@@ -71,4 +61,4 @@ int ParseEvents(char *eventsData);
     }
 #endif
 
-#endif  /* ndef __UbsData_H__ */
+#endif  /* ndef __clientData_H__ */

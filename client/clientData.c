@@ -1,18 +1,8 @@
 //==============================================================================
-//
-// Title:       UbsData.c
-// Purpose:     A short description of the implementation.
-//
-// Created on:  22.12.2020 at 13:20:37 by Vasya.
-// Copyright:   Laboratory of anomalous materials. All Rights Reserved.
-//
-//==============================================================================
-
-//==============================================================================
 // Include files
 
 #include <ansi_c.h>
-#include "UbsData.h"
+#include "clientData.h"
 #include "TimeMarkers.h"
 #include "MessageStack.h"
 

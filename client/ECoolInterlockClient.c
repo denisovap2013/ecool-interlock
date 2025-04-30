@@ -54,7 +54,7 @@ void initLogAndDataFilesNames(void);
 void createInfoFile(void);
 void RequestNames(void);
 
-int PrepareUbsDataRequestOnSchedule(void);
+int PrepareDataRequestOnSchedule(void);
 int PrepareModuleStatusRequestOnSchedule(void);
 
 int WriteDataFilesOnSchedule(void);
@@ -295,7 +295,7 @@ int PrepareModuleStatusRequestOnSchedule(void) {
 }
 
 
-int PrepareUbsDataRequestOnSchedule(void) {
+int PrepareDataRequestOnSchedule(void) {
 	char command[256];
 	static ubsRequestWaitingTics = 0;	
 	
@@ -530,7 +530,7 @@ int CVICALLBACK tick (int panel, int control, int event,
 			if (connectionEstablished) {
 				// sending request to the server
 				PrepareModuleStatusRequestOnSchedule();
-				PrepareUbsDataRequestOnSchedule();
+				PrepareDataRequestOnSchedule();
 				
 				// Process the global requests queue
 				sendRequestIfAvailable(serverHandle);
