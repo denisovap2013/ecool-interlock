@@ -43,7 +43,7 @@
 // Global variables
 int mainPanelHandle, helpPanelHandle, eventPanelHandle;
 
-int clientToServerConnectionLED, serverToUbsConnectionLED;
+int clientToServerConnectionLED, serverToHardwareConnectionLED;
 
 int diPanelHandles[DI_NUMBER], diPanelCallButtons[DI_NUMBER];
 int dqPanelHandles[DQ_NUMBER], dqPanelCallButtons[DQ_NUMBER];
@@ -229,11 +229,11 @@ int createMainPanelGui(void) {
 	yPos += 23;
 	
 	// Server-UBS connection indicator
-	serverToUbsConnectionLED = NewCtrl(mainPanelHandle, CTRL_SQUARE_LED_LS, "Server-UBS (Modbus): offline", yPos, xPos); 
-	SetCtrlAttribute(mainPanelHandle, serverToUbsConnectionLED, ATTR_OFF_COLOR, VAL_RED);
-	SetCtrlAttribute(mainPanelHandle, serverToUbsConnectionLED, ATTR_ON_COLOR, VAL_GREEN); 
-	SetCtrlAttribute(mainPanelHandle, serverToUbsConnectionLED, ATTR_LABEL_TOP, yPos + 3);  
-	SetCtrlAttribute(mainPanelHandle, serverToUbsConnectionLED, ATTR_LABEL_LEFT, 45);
+	serverToHardwareConnectionLED = NewCtrl(mainPanelHandle, CTRL_SQUARE_LED_LS, "Server-UBS (Modbus): offline", yPos, xPos); 
+	SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_OFF_COLOR, VAL_RED);
+	SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_ON_COLOR, VAL_GREEN); 
+	SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_TOP, yPos + 3);  
+	SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_LEFT, 45);
 	
 	yPos += 35;
 	
@@ -803,11 +803,11 @@ void UpdateAdcGraphs(void) {
 
 
 void UpdateConnectionStateIndicator(void) {
-	SetCtrlVal(mainPanelHandle, serverToUbsConnectionLED, SERVER_UBS_CONNECTED);
+	SetCtrlVal(mainPanelHandle, serverToHardwareConnectionLED, SERVER_UBS_CONNECTED);
 	if (SERVER_UBS_CONNECTED)
-		SetCtrlAttribute(mainPanelHandle, serverToUbsConnectionLED, ATTR_LABEL_TEXT, "Server-UBS (Modbus): online");
+		SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_TEXT, "Server-UBS (Modbus): online");
 	else
-		SetCtrlAttribute(mainPanelHandle, serverToUbsConnectionLED, ATTR_LABEL_TEXT, "Server-UBS (Modbus): offline");
+		SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_TEXT, "Server-UBS (Modbus): offline");
 }
 
 
@@ -881,19 +881,19 @@ int CVICALLBACK selectEvent (int panel, int control, int event,
 	switch (event)
 	{
 		case EVENT_COMMIT:
-			if (UBS_EVENTS_LIST.eventsNumber == 0) return 0;
+			if (INTERLOCK_EVENTS_LIST.eventsNumber == 0) return 0;
 
 			eventIndex = eventData1;
 			
-			if (eventIndex < UBS_EVENTS_LIST.eventsNumber) {
+			if (eventIndex < INTERLOCK_EVENTS_LIST.eventsNumber) {
 				UpdateTheEventsIndicators(eventIndex);
 				
-			} else if (eventIndex == UBS_EVENTS_LIST.eventsNumber) {
+			} else if (eventIndex == INTERLOCK_EVENTS_LIST.eventsNumber) {
 				sprintf(
 					command,
 					"%s %u %u\n",
 					CMD_GET_EVENTS,
-					UBS_EVENTS_LIST.events[UBS_EVENTS_LIST.eventsNumber - 1].timeStamp,
+					INTERLOCK_EVENTS_LIST.events[INTERLOCK_EVENTS_LIST.eventsNumber - 1].timeStamp,
 					getToTimeStamp()
 				);
 				appendGlobalRequestQueueRecord(CMD_GET_EVENTS_ID, command, NULL);
@@ -913,19 +913,19 @@ void PrintTheEventsList(void) {
 	
 	ClearListCtrl(eventPanelHandle, eventPanel_LISTBOX);
 	
-	if (UBS_EVENTS_LIST.eventsNumber == 0) {
+	if (INTERLOCK_EVENTS_LIST.eventsNumber == 0) {
 	
 		InsertListItem(eventPanelHandle, eventPanel_LISTBOX, 0, "No events available.", 0); 
 		UpdateTheEventsIndicators(-1);
 		return;
 	}
 
-	for (i=0; i<UBS_EVENTS_LIST.eventsNumber; i++) {
-		InsertListItem(eventPanelHandle, eventPanel_LISTBOX, i, UBS_EVENTS_LIST.events[i].textTimeInfo, 0);		
+	for (i=0; i<INTERLOCK_EVENTS_LIST.eventsNumber; i++) {
+		InsertListItem(eventPanelHandle, eventPanel_LISTBOX, i, INTERLOCK_EVENTS_LIST.events[i].textTimeInfo, 0);		
 	}
 	
-	if (UBS_EVENTS_LIST.moreAvailable) {
-		InsertListItem(eventPanelHandle, eventPanel_LISTBOX, UBS_EVENTS_LIST.eventsNumber, "More available ...", 0);	
+	if (INTERLOCK_EVENTS_LIST.moreAvailable) {
+		InsertListItem(eventPanelHandle, eventPanel_LISTBOX, INTERLOCK_EVENTS_LIST.eventsNumber, "More available ...", 0);	
 	}
 }
 
@@ -958,7 +958,7 @@ void UpdateTheEventsIndicators(int eventId) {
 		// Update DI values
 		for (i=0; i<DI_NUMBER; i++) {
 			for(j=0; j<CHANNELS_PER_DI; j++) {
-				SetCtrlVal(eventPanelHandle, diEventsIndicatorsHandles[i][j], UBS_EVENTS_LIST.events[eventId].DI_VALUES[i] & (1 << j));
+				SetCtrlVal(eventPanelHandle, diEventsIndicatorsHandles[i][j], INTERLOCK_EVENTS_LIST.events[eventId].DI_VALUES[i] & (1 << j));
 				SetCtrlAttribute(eventPanelHandle, diEventsIndicatorsHandles[i][j], ATTR_DIMMED, 0); 
 			}
 		}
@@ -966,7 +966,7 @@ void UpdateTheEventsIndicators(int eventId) {
 		// Update DQ values
 		for (i=0; i<DQ_NUMBER; i++) {
 			for(j=0; j<CHANNELS_PER_DQ_ACTUAL; j++) {
-				SetCtrlVal(eventPanelHandle, dqEventsIndicatorsHandles[i][j], UBS_EVENTS_LIST.events[eventId].DQ_VALUES[i] & (1 << (j * 2)));
+				SetCtrlVal(eventPanelHandle, dqEventsIndicatorsHandles[i][j], INTERLOCK_EVENTS_LIST.events[eventId].DQ_VALUES[i] & (1 << (j * 2)));
 				SetCtrlAttribute(eventPanelHandle, dqEventsIndicatorsHandles[i][j], ATTR_DIMMED, 0); 
 			}
 		}	

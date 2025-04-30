@@ -47,7 +47,7 @@ extern double ADC_VALUES[ADC_NUMBER][CHANNELS_PER_ADC];
 extern double DAC_VALUES[DAC_NUMBER][CHANNELS_PER_DAC];
 extern unsigned short DEVICES_DIAGNOSTICS;
 extern int SERVER_UBS_CONNECTED;
-extern ubs_event_list_t UBS_EVENTS_LIST;  
+extern ubs_event_list_t INTERLOCK_EVENTS_LIST;  
 
 //==============================================================================
 // Global functions

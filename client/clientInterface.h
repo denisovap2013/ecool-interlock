@@ -37,7 +37,7 @@
 // Constants
 extern int mainPanelHandle, helpPanelHandle, eventPanelHandle;
 
-extern int clientToServerConnectionLED, serverToUbsConnectionLED;
+extern int clientToServerConnectionLED, serverToHardwareConnectionLED;
 
 extern int diPanelHandles[DI_NUMBER], diPanelCallButtons[DI_NUMBER];
 extern int dqPanelHandles[DQ_NUMBER], dqPanelCallButtons[DQ_NUMBER];

@@ -26,7 +26,7 @@ double ADC_VALUES[ADC_NUMBER][CHANNELS_PER_ADC] = {0};
 double DAC_VALUES[DAC_NUMBER][CHANNELS_PER_DAC] = {0};
 unsigned short DEVICES_DIAGNOSTICS = 0;
 int SERVER_UBS_CONNECTED = 0;
-ubs_event_list_t UBS_EVENTS_LIST = {0};
+ubs_event_list_t INTERLOCK_EVENTS_LIST = {0};
 //==============================================================================
 // Global functions
 
@@ -99,34 +99,34 @@ int ParseEvents(char *eventsData) {
 	dataPos = eventsData;
 	
 	// Get the number of events and flag indicating if more data is available
-	if (sscanf(dataPos, "%d%n", &UBS_EVENTS_LIST.eventsNumber, &pos) != 1) {
+	if (sscanf(dataPos, "%d%n", &INTERLOCK_EVENTS_LIST.eventsNumber, &pos) != 1) {
 		msAddMsg(msGMS(), "%s Error! Unable to parse the number of events.\n", TimeStamp(0));
 		return -1;
 	}
 	dataPos += pos;
 	
 	// If no events available, skip further reading
-	if (UBS_EVENTS_LIST.eventsNumber == 0) {
-		UBS_EVENTS_LIST.moreAvailable = 0;
+	if (INTERLOCK_EVENTS_LIST.eventsNumber == 0) {
+		INTERLOCK_EVENTS_LIST.moreAvailable = 0;
 		return 0;
 	}
 	
-	if (sscanf(dataPos, "%d%n", &UBS_EVENTS_LIST.moreAvailable, &pos) != 1) {
+	if (sscanf(dataPos, "%d%n", &INTERLOCK_EVENTS_LIST.moreAvailable, &pos) != 1) {
 		msAddMsg(msGMS(), "%s Error! Unable to parse the flag indicating if more data is available.\n", TimeStamp(0));
 		return -1;
 	}
 	dataPos += pos;
 	
 	// For each event parse the info
-	for (j=0; j<UBS_EVENTS_LIST.eventsNumber; j++) {
-		if (sscanf(dataPos, "%u%n", &UBS_EVENTS_LIST.events[j].timeStamp, &pos) != 1) {
+	for (j=0; j<INTERLOCK_EVENTS_LIST.eventsNumber; j++) {
+		if (sscanf(dataPos, "%u%n", &INTERLOCK_EVENTS_LIST.events[j].timeStamp, &pos) != 1) {
 			msAddMsg(msGMS(), "%s Error! Unable to parse timestamp data for event %d (counting from zero).\n", TimeStamp(0), j);
 			return -1;
 		}
 		dataPos += pos;
 		
 		for (i=0; i<DI_NUMBER; i++) {
-			if (sscanf(dataPos, "%X%n", &UBS_EVENTS_LIST.events[j].DI_VALUES[i], &pos) != 1) {
+			if (sscanf(dataPos, "%X%n", &INTERLOCK_EVENTS_LIST.events[j].DI_VALUES[i], &pos) != 1) {
 				msAddMsg(msGMS(), "%s Error! Unable to parse DI-%d hex data for event %d (counting from zero).\n", TimeStamp(0), i, j);
 				return -1;
 			}
@@ -134,7 +134,7 @@ int ParseEvents(char *eventsData) {
 		}
 	
 		for (i=0; i<DQ_NUMBER; i++) {
-			if (sscanf(dataPos, "%hX%n", &UBS_EVENTS_LIST.events[j].DQ_VALUES[i], &pos) != 1) {
+			if (sscanf(dataPos, "%hX%n", &INTERLOCK_EVENTS_LIST.events[j].DQ_VALUES[i], &pos) != 1) {
 				msAddMsg(msGMS(), "%s Error! Unable to parse DQ-%d hex data for event %d (counting from zero).\n", TimeStamp(0), i, j);
 				return -1;
 			}
@@ -143,10 +143,10 @@ int ParseEvents(char *eventsData) {
 		
 		// Turn the timestamp into the text representation
 		strftime(
-			UBS_EVENTS_LIST.events[j].textTimeInfo,
-			sizeof(UBS_EVENTS_LIST.events[j].textTimeInfo),
+			INTERLOCK_EVENTS_LIST.events[j].textTimeInfo,
+			sizeof(INTERLOCK_EVENTS_LIST.events[j].textTimeInfo),
 			"%Y.%m.%d - %X",
-			localtime(&UBS_EVENTS_LIST.events[j].timeStamp)
+			localtime(&INTERLOCK_EVENTS_LIST.events[j].timeStamp)
 		);
 	}
 
