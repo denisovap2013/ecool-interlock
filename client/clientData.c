@@ -25,8 +25,8 @@ unsigned short DQ_VALUES[DQ_NUMBER] = {0};
 double ADC_VALUES[ADC_NUMBER][CHANNELS_PER_ADC] = {0};
 double DAC_VALUES[DAC_NUMBER][CHANNELS_PER_DAC] = {0};
 unsigned short DEVICES_DIAGNOSTICS = 0;
-int SERVER_UBS_CONNECTED = 0;
-ubs_event_list_t INTERLOCK_EVENTS_LIST = {0};
+int SERVER_HARDWARE_CONNECTED = 0;
+interlock_event_list_t INTERLOCK_EVENTS_LIST = {0};
 //==============================================================================
 // Global functions
 
@@ -84,7 +84,7 @@ int ParseValues(char *spaceSeparatedData) {
 
 
 int ParseConnectionState(char *textData) {
-	if (sscanf(textData, "%d", &SERVER_UBS_CONNECTED) != 1) {
+	if (sscanf(textData, "%d", &SERVER_HARDWARE_CONNECTED) != 1) {
 		msAddMsg(msGMS(), "%s Error! Unable to parse server status info.\n", TimeStamp(0));
 		return -1;
 	}

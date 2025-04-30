@@ -11,11 +11,6 @@
 #ifndef __clientInterface_H__
 #define __clientInterface_H__
 
-#define UBS_BLOCKS 6
-#define UBS_CHANNELS 16 
-#define ADC_CHANNELS 20
-#define ADC_NUMBER_OLD 1
-
 #include "clientData.h"
 
 

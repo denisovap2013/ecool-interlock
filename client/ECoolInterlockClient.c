@@ -118,9 +118,9 @@ void initLogAndDataFilesNames(void) {
 	GetSystemTime(&hours, &minutes, &seconds);
 
 	sprintf(nameBase, "%02d.%02d.%02d_%02d-%02d-%02d", year, month, day, hours, minutes, seconds);
-	sprintf(logFileName, "ubsClientLog_%s.dat", nameBase);
-	sprintf(dataFileName, "ubsClientData_%s.dat", nameBase);
-	sprintf(infoFileName, "ubsClientInfo_%s.txt", nameBase);
+	sprintf(logFileName, "interlockClientLog_%s.dat", nameBase);
+	sprintf(dataFileName, "interlockClientData_%s.dat", nameBase);
+	sprintf(infoFileName, "interlockClientInfo_%s.txt", nameBase);
 }
 
 
@@ -297,22 +297,22 @@ int PrepareModuleStatusRequestOnSchedule(void) {
 
 int PrepareDataRequestOnSchedule(void) {
 	char command[256];
-	static ubsRequestWaitingTics = 0;	
+	static serverRequestWaitingTics = 0;	
 	
 	if (!connectionEstablished) return 0;
 	
 	if (hasSameGlobalRequestsRecordID(CMD_GET_ALLVALUES_ID)) return 0;
 
-	if (ubsRequestWaitingTics * TIMER_TICK_TIME >= CFG_SERVER_REQUEST_RATE) {
+	if (serverRequestWaitingTics * TIMER_TICK_TIME >= CFG_SERVER_REQUEST_RATE) {
 		sprintf(command,"%s\n", CMD_GET_ALLVALUES); 
 
 		if (appendGlobalRequestQueueRecord(CMD_GET_ALLVALUES_ID, command, NULL)) {
-			ubsRequestWaitingTics = 0; 
+			serverRequestWaitingTics = 0; 
 			return 1;
 		}
 		
 	} else {
-		ubsRequestWaitingTics++;
+		serverRequestWaitingTics++;
 	}
 	
 	return 0;
@@ -617,7 +617,7 @@ int clientCallbackFunction(unsigned handle, int xType, int errCode, void * callb
 							UpdateAllValues();
 							UpdateAdcGraphs();
 						} else
-							msAddMsg(msGMS(), "%s Error! Unable to parse the following UBS data: %s.\n", TimeStamp(0), message); 
+							msAddMsg(msGMS(), "%s Error! Unable to parse the following Interlock data: %s.\n", TimeStamp(0), message); 
 						break;	
 					
 					case CMD_GET_CONNECTION_STATE_ID:

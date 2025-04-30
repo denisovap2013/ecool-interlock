@@ -23,21 +23,21 @@
 #define CHANNELS_PER_DQ 16
 #define CHANNELS_PER_DQ_ACTUAL 8
 		
-#define MAX_UBS_EVENTS 50
+#define MAX_INTERLOCK_EVENTS 50
 //==============================================================================
 // Types
-typedef struct ubs_event {
+typedef struct interlock_event {
 	time_t timeStamp;
 	char textTimeInfo[64];
 	unsigned int DI_VALUES[DI_NUMBER];
 	unsigned short DQ_VALUES[DQ_NUMBER];
-} ubs_event_t;
+} interlock_event_t;
 
-typedef struct ubs_event_list {
-	ubs_event_t events[MAX_UBS_EVENTS + 1];
+typedef struct interlock_event_list {
+	interlock_event_t events[MAX_INTERLOCK_EVENTS + 1];
 	int eventsNumber;
 	int moreAvailable;
-} ubs_event_list_t;
+} interlock_event_list_t;
 
 //==============================================================================
 // External variables
@@ -46,8 +46,8 @@ extern unsigned short DQ_VALUES[DQ_NUMBER];
 extern double ADC_VALUES[ADC_NUMBER][CHANNELS_PER_ADC];
 extern double DAC_VALUES[DAC_NUMBER][CHANNELS_PER_DAC];
 extern unsigned short DEVICES_DIAGNOSTICS;
-extern int SERVER_UBS_CONNECTED;
-extern ubs_event_list_t INTERLOCK_EVENTS_LIST;  
+extern int SERVER_HARDWARE_CONNECTED;
+extern interlock_event_list_t INTERLOCK_EVENTS_LIST;  
 
 //==============================================================================
 // Global functions

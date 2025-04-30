@@ -228,8 +228,8 @@ int createMainPanelGui(void) {
 	
 	yPos += 23;
 	
-	// Server-UBS connection indicator
-	serverToHardwareConnectionLED = NewCtrl(mainPanelHandle, CTRL_SQUARE_LED_LS, "Server-UBS (Modbus): offline", yPos, xPos); 
+	// Server-Interlock connection indicator
+	serverToHardwareConnectionLED = NewCtrl(mainPanelHandle, CTRL_SQUARE_LED_LS, "Interlock (Modbus): offline", yPos, xPos); 
 	SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_OFF_COLOR, VAL_RED);
 	SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_ON_COLOR, VAL_GREEN); 
 	SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_TOP, yPos + 3);  
@@ -803,11 +803,11 @@ void UpdateAdcGraphs(void) {
 
 
 void UpdateConnectionStateIndicator(void) {
-	SetCtrlVal(mainPanelHandle, serverToHardwareConnectionLED, SERVER_UBS_CONNECTED);
-	if (SERVER_UBS_CONNECTED)
-		SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_TEXT, "Server-UBS (Modbus): online");
+	SetCtrlVal(mainPanelHandle, serverToHardwareConnectionLED, SERVER_HARDWARE_CONNECTED);
+	if (SERVER_HARDWARE_CONNECTED)
+		SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_TEXT, "Interlock (Modbus): online");
 	else
-		SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_TEXT, "Server-UBS (Modbus): offline");
+		SetCtrlAttribute(mainPanelHandle, serverToHardwareConnectionLED, ATTR_LABEL_TEXT, "Interlock (Modbus): offline");
 }
 
 
