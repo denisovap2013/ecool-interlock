@@ -16,7 +16,7 @@
 extern char CFG_SERVER_IP[256];
 extern unsigned int CFG_SERVER_PORT;
 extern double CFG_SERVER_CONNECTION_INTERVAL;
-extern double CFG_UBS_REQUEST_RATE;
+extern double CFG_SERVER_REQUEST_RATE;
 
 
 extern char CFG_LOG_DIRECTORY[256];

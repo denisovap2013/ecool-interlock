@@ -850,8 +850,8 @@ int  CVICALLBACK requestEvents(int panel, int control, int event, void *callback
 	switch (event)
 	{
 		case EVENT_COMMIT:
-			sprintf(command, "%s %u %u\n", UBS_CMD_GET_EVENTS, getFromTimeStamp(), getToTimeStamp());
-			appendGlobalRequestQueueRecord(UBS_CMD_GET_EVENTS_ID, command, NULL);
+			sprintf(command, "%s %u %u\n", CMD_GET_EVENTS, getFromTimeStamp(), getToTimeStamp());
+			appendGlobalRequestQueueRecord(CMD_GET_EVENTS_ID, command, NULL);
 			break;
 	}
 	return 0;		
@@ -892,11 +892,11 @@ int CVICALLBACK selectEvent (int panel, int control, int event,
 				sprintf(
 					command,
 					"%s %u %u\n",
-					UBS_CMD_GET_EVENTS,
+					CMD_GET_EVENTS,
 					UBS_EVENTS_LIST.events[UBS_EVENTS_LIST.eventsNumber - 1].timeStamp,
 					getToTimeStamp()
 				);
-				appendGlobalRequestQueueRecord(UBS_CMD_GET_EVENTS_ID, command, NULL);
+				appendGlobalRequestQueueRecord(CMD_GET_EVENTS_ID, command, NULL);
 
 			} else {
 				MessagePopup("Selected index is out of range", "How the f**k did you do this?");	

@@ -247,25 +247,25 @@ void RequestNames(void) {
 	int flags[5] = {0, 0, 0, 0, 0};
 	
 	// DI
-	sprintf(command, "%s\n", UBS_CMD_GET_DI_NAMES);
-	appendGlobalRequestQueueRecord(UBS_CMD_GET_DI_NAMES_ID, command, NULL);
+	sprintf(command, "%s\n", CMD_GET_DI_NAMES);
+	appendGlobalRequestQueueRecord(CMD_GET_DI_NAMES_ID, command, NULL);
 	
 	// DQ
-	sprintf(command, "%s\n", UBS_CMD_GET_DQ_NAMES);
-	appendGlobalRequestQueueRecord(UBS_CMD_GET_DQ_NAMES_ID, command, NULL);
+	sprintf(command, "%s\n", CMD_GET_DQ_NAMES);
+	appendGlobalRequestQueueRecord(CMD_GET_DQ_NAMES_ID, command, NULL);
 	
 	// ADC
 	for(i=0; i<ADC_NUMBER; i++) {
-		sprintf(command, "%s %d\n", UBS_CMD_GET_ADC_NAMES, i);
+		sprintf(command, "%s %d\n", CMD_GET_ADC_NAMES, i);
 		flags[0] = i;
-		appendGlobalRequestQueueRecord(UBS_CMD_GET_ADC_NAMES_ID, command, &flags);
+		appendGlobalRequestQueueRecord(CMD_GET_ADC_NAMES_ID, command, &flags);
 	}
 	
 	// DAC
 	for(i=0; i<DAC_NUMBER; i++) {
-		sprintf(command, "%s %d\n", UBS_CMD_GET_DAC_NAMES, i);
+		sprintf(command, "%s %d\n", CMD_GET_DAC_NAMES, i);
 		flags[0] = i;
-		appendGlobalRequestQueueRecord(UBS_CMD_GET_DAC_NAMES_ID, command, &flags);
+		appendGlobalRequestQueueRecord(CMD_GET_DAC_NAMES_ID, command, &flags);
 	}
 }
 
@@ -277,12 +277,12 @@ int PrepareModuleStatusRequestOnSchedule(void) {
 	
 	if (!connectionEstablished) return 0;
 	
-	if (hasSameGlobalRequestsRecordID(UBS_CMD_GET_CONNECTION_STATE_ID)) return 0;
+	if (hasSameGlobalRequestsRecordID(CMD_GET_CONNECTION_STATE_ID)) return 0;
 
 	if (moduleStatusWaitingTics * TIMER_TICK_TIME >= MODULE_STATUS_REQUEST_PERIOD) {
-		sprintf(command,"%s\n", UBS_CMD_GET_CONNECTION_STATE); 
+		sprintf(command,"%s\n", CMD_GET_CONNECTION_STATE); 
 		
-		if (appendGlobalRequestQueueRecord(UBS_CMD_GET_CONNECTION_STATE_ID, command, NULL)) {
+		if (appendGlobalRequestQueueRecord(CMD_GET_CONNECTION_STATE_ID, command, NULL)) {
 			moduleStatusWaitingTics = 0; 
 			return 1;
 		}
@@ -301,12 +301,12 @@ int PrepareDataRequestOnSchedule(void) {
 	
 	if (!connectionEstablished) return 0;
 	
-	if (hasSameGlobalRequestsRecordID(UBS_CMD_GET_ALLVALUES_ID)) return 0;
+	if (hasSameGlobalRequestsRecordID(CMD_GET_ALLVALUES_ID)) return 0;
 
-	if (ubsRequestWaitingTics * TIMER_TICK_TIME >= CFG_UBS_REQUEST_RATE) {
-		sprintf(command,"%s\n", UBS_CMD_GET_ALLVALUES); 
+	if (ubsRequestWaitingTics * TIMER_TICK_TIME >= CFG_SERVER_REQUEST_RATE) {
+		sprintf(command,"%s\n", CMD_GET_ALLVALUES); 
 
-		if (appendGlobalRequestQueueRecord(UBS_CMD_GET_ALLVALUES_ID, command, NULL)) {
+		if (appendGlobalRequestQueueRecord(CMD_GET_ALLVALUES_ID, command, NULL)) {
 			ubsRequestWaitingTics = 0; 
 			return 1;
 		}
@@ -600,32 +600,32 @@ int clientCallbackFunction(unsigned handle, int xType, int errCode, void * callb
 				//printf("Answer from server: %s\n", message);  // For debugging
 				
 				switch (globalRequestState.requestID) {
-					case UBS_CMD_GET_DI_NAMES_ID:
-						SetDiNames(message + strlen(UBS_CMD_GET_DI_NAMES) + 1); break;
+					case CMD_GET_DI_NAMES_ID:
+						SetDiNames(message + strlen(CMD_GET_DI_NAMES) + 1); break;
 			
-					case UBS_CMD_GET_DQ_NAMES_ID:
-						SetDqNames(message + strlen(UBS_CMD_GET_DQ_NAMES) + 1); break;
+					case CMD_GET_DQ_NAMES_ID:
+						SetDqNames(message + strlen(CMD_GET_DQ_NAMES) + 1); break;
 																																			 
-					case UBS_CMD_GET_ADC_NAMES_ID:
-						SetAdcNames(globalRequestState.flags[0], message + strlen(UBS_CMD_GET_ADC_NAMES) + 1); break;
+					case CMD_GET_ADC_NAMES_ID:
+						SetAdcNames(globalRequestState.flags[0], message + strlen(CMD_GET_ADC_NAMES) + 1); break;
 																																											
-					case UBS_CMD_GET_DAC_NAMES_ID:
-						SetDacNames(globalRequestState.flags[0], message + strlen(UBS_CMD_GET_DAC_NAMES) + 1); break;
+					case CMD_GET_DAC_NAMES_ID:
+						SetDacNames(globalRequestState.flags[0], message + strlen(CMD_GET_DAC_NAMES) + 1); break;
 																																											
-					case UBS_CMD_GET_ALLVALUES_ID:
-						if (ParseValues(message + strlen(UBS_CMD_GET_ALLVALUES)) == 0) { 
+					case CMD_GET_ALLVALUES_ID:
+						if (ParseValues(message + strlen(CMD_GET_ALLVALUES)) == 0) { 
 							UpdateAllValues();
 							UpdateAdcGraphs();
 						} else
 							msAddMsg(msGMS(), "%s Error! Unable to parse the following UBS data: %s.\n", TimeStamp(0), message); 
 						break;	
 					
-					case UBS_CMD_GET_CONNECTION_STATE_ID:
-						if (ParseConnectionState(message + strlen(UBS_CMD_GET_CONNECTION_STATE)) == 0) UpdateConnectionStateIndicator(); 
+					case CMD_GET_CONNECTION_STATE_ID:
+						if (ParseConnectionState(message + strlen(CMD_GET_CONNECTION_STATE)) == 0) UpdateConnectionStateIndicator(); 
 						break;
 					
-					case UBS_CMD_GET_EVENTS_ID:
-						if (ParseEvents(message + strlen(UBS_CMD_GET_EVENTS) + 1) < 0) {
+					case CMD_GET_EVENTS_ID:
+						if (ParseEvents(message + strlen(CMD_GET_EVENTS) + 1) < 0) {
 							// Error occurred. Clear the events list
 							ClearListCtrl(eventPanelHandle, eventPanel_LISTBOX);
 							InsertListItem(eventPanelHandle, eventPanel_LISTBOX, 0, "Error occurred", 0);
