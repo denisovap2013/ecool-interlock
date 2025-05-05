@@ -51,7 +51,6 @@ int adcPanelHandles[ADC_NUMBER], adcPanelCallButtons[ADC_NUMBER];
 int dacPanelHandles[DAC_NUMBER], dacPanelCallButtons[DAC_NUMBER];
 
 int diagnosticsLEDs[16];
-int helpBtnHandle, eventBtnHandle;
 
 // DI blocks gui
 int diIndicatorsHandles[DI_NUMBER][CHANNELS_PER_DI];
@@ -205,19 +204,11 @@ int createMainPanelGui(void) {
 	int i, yPos, xPos, diagIndexShift, windowWidth;
 	char text[256];
 
-	yPos = 5;
+	yPos = 25;
 	xPos = 5;
 	diagIndexShift = 0;
 	
 	windowWidth = 10 + BLOCK_BUTTON_WIDTH + DIAGNOSTICS_LED_WIDTH + 2;
-	
-	// Help button
-	helpBtnHandle = createMainPanelButton(xPos, yPos, windowWidth - 10, BLOCK_BUTTON_HEIGHT, "Цветовые обозначения", VAL_WHITE);
-	yPos += BLOCK_BUTTON_HEIGHT + 5; 
-	
-	// Event window button
-	eventBtnHandle = createMainPanelButton(xPos, yPos, windowWidth - 10, BLOCK_BUTTON_HEIGHT, "Просмотр событий", VAL_WHITE);
-	yPos += BLOCK_BUTTON_HEIGHT + 5; 
 	
 	// Client-Server connection indicator
 	clientToServerConnectionLED = NewCtrl(mainPanelHandle, CTRL_SQUARE_LED_LS, "Clinet-Server: offline", yPos, xPos); 
@@ -316,16 +307,6 @@ int CVICALLBACK mainMenuButtonCallback (int panel, int control, int event, void 
 	switch (event)
 	{
 		case EVENT_COMMIT:
-			if (control == helpBtnHandle) {
-				DisplayPanel(helpPanelHandle);
-				break;
-			}
-			
-			if (control == eventBtnHandle) {
-				DisplayPanel(eventPanelHandle);
-				break;
-			}
-			
 			// Search for DI block button
 			for (i=0; i<DI_NUMBER; i++) {
 				if (diPanelCallButtons[i] == control) {
@@ -971,4 +952,36 @@ void UpdateTheEventsIndicators(int eventId) {
 			}
 		}	
 	}
+}
+
+
+void CVICALLBACK ShowColorNotation (int menuBar, int menuItem, void *callbackData, int panel)
+{
+    DisplayPanel(helpPanelHandle);
+}
+
+
+void CVICALLBACK ShowEventsWindow (int menuBar, int menuItem, void *callbackData, int panel)
+{
+	DisplayPanel(eventPanelHandle); 
+}
+
+
+void CVICALLBACK SaveView (int menuBar, int menuItem, void *callbackData, int panel)
+{
+}
+
+
+void CVICALLBACK LoadView (int menuBar, int menuItem, void *callbackData, int panel)
+{
+}
+
+
+void CVICALLBACK ShowHideConsole (int menuBar, int menuItem, void *callbackData, int panel)
+{
+}
+
+
+void CVICALLBACK ClearAllErrors (int menuBar, int menuItem, void *callbackData, int panel)
+{
 }

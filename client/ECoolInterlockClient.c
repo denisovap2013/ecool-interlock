@@ -555,7 +555,7 @@ int CVICALLBACK tick (int panel, int control, int event,
 						}
 						
 						SetCtrlVal(mainPanelHandle, clientToServerConnectionLED, 1);
-						SetCtrlAttribute(mainPanelHandle, clientToServerConnectionLED, ATTR_LABEL_TEXT, "Clinet-Server: online");
+						SetCtrlAttribute(mainPanelHandle, clientToServerConnectionLED, ATTR_LABEL_TEXT, "Client-Server: online");
 						msAddMsg(msGMS(), "%s Connection to the server is established.", TimeStamp(0));
 					} else {
 						msAddMsg(msGMS(), "%s Connection to the server failed. Next connection request in %.1fs.", TimeStamp(0), CFG_SERVER_CONNECTION_INTERVAL);
@@ -584,7 +584,7 @@ int clientCallbackFunction(unsigned handle, int xType, int errCode, void * callb
 			clearGlobalRequestsQueue();
 			
 			SetCtrlVal(mainPanelHandle, clientToServerConnectionLED, 0);
-			SetCtrlAttribute(mainPanelHandle, clientToServerConnectionLED, ATTR_LABEL_TEXT, "Clinet-Server: offline");
+			SetCtrlAttribute(mainPanelHandle, clientToServerConnectionLED, ATTR_LABEL_TEXT, "Client-Server: offline");
 			msAddMsg(msGMS(), "%s Connection to the server has lost. Next connection request in %.1fs.", TimeStamp(0), CFG_SERVER_CONNECTION_INTERVAL);
 			break;
 		case TCP_DATAREADY:

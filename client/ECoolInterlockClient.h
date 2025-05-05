@@ -1,6 +1,6 @@
 /**************************************************************************/
 /* LabWindows/CVI User Interface Resource (UIR) Include File              */
-/* Copyright (c) National Instruments 2021. All Rights Reserved.          */
+/* Copyright (c) National Instruments 2025. All Rights Reserved.          */
 /*                                                                        */
 /* WARNING: Do not add to, delete from, or otherwise modify the contents  */
 /*          of this include file.                                         */
@@ -68,22 +68,40 @@
 
      /* Menu Bars, Menus, and Menu Items: */
 
-          /* (no menu bars in the resource file) */
+#define  MENU                             1
+#define  MENU_PROGRAM                     2
+#define  MENU_PROGRAM_SAVE_VIEW           3       /* callback function: SaveView */
+#define  MENU_PROGRAM_LOAD_VIEW           4       /* callback function: LoadView */
+#define  MENU_PROGRAM_SEPARATOR           5
+#define  MENU_PROGRAM_HELP                6
+#define  MENU_PROGRAM_HELP_SUBMENU        7
+#define  MENU_PROGRAM_HELP_CLR_INFO       8       /* callback function: ShowColorNotation */
+#define  MENU_PROGRAM_SEPARATOR_2         9
+#define  MENU_PROGRAM_CONSOLE             10      /* callback function: ShowHideConsole */
+#define  MENU_PROGRAM_EVENTS_WINDOW       11      /* callback function: ShowEventsWindow */
+#define  MENU_CMD                         12
+#define  MENU_CMD_CLEAR_ERRS              13      /* callback function: ClearAllErrors */
 
 
      /* Callback Prototypes: */
 
 int  CVICALLBACK _toCur(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK blockPanelCallback(int panel, int event, void *callbackData, int eventData1, int eventData2);
+void CVICALLBACK ClearAllErrors(int menubar, int menuItem, void *callbackData, int panel);
 int  CVICALLBACK clearEventsList(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK clearPlotCallback(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK fitPlotButtonCallback(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK graphPanelCallback(int panel, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK graphVerticalRange(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK helpPanelCallback(int panel, int event, void *callbackData, int eventData1, int eventData2);
+void CVICALLBACK LoadView(int menubar, int menuItem, void *callbackData, int panel);
 int  CVICALLBACK mainPanelCallback(int panel, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK requestEvents(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
+void CVICALLBACK SaveView(int menubar, int menuItem, void *callbackData, int panel);
 int  CVICALLBACK selectEvent(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
+void CVICALLBACK ShowColorNotation(int menubar, int menuItem, void *callbackData, int panel);
+void CVICALLBACK ShowEventsWindow(int menubar, int menuItem, void *callbackData, int panel);
+void CVICALLBACK ShowHideConsole(int menubar, int menuItem, void *callbackData, int panel);
 int  CVICALLBACK tick(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 
 
