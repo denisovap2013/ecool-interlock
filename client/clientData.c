@@ -38,7 +38,7 @@ int ParseValues(char *spaceSeparatedData) {
 
 	for (i=0; i<DI_NUMBER; i++) {
 		if (sscanf(spaceSeparatedData + shift, "%X%n", &DI_VALUES[i], &pos) != 1) {
-			msAddMsg(msGMS(), "%s Error! Unable to parse DI-%d hex data.\n", TimeStamp(0), i);
+			logMessage("Error! Unable to parse DI-%d hex data.\n", i);
 			return -1;
 		}
 		shift += pos;
@@ -46,7 +46,7 @@ int ParseValues(char *spaceSeparatedData) {
 	
 	for (i=0; i<DQ_NUMBER; i++) {
 		if (sscanf(spaceSeparatedData + shift, "%hX%n", &DQ_VALUES[i], &pos) != 1) {
-			msAddMsg(msGMS(), "%s Error! Unable to parse DQ-%d hex data.\n", TimeStamp(0), i);
+			logMessage("Error! Unable to parse DQ-%d hex data.\n", i);
 			return -1;
 		}
 		shift += pos;
@@ -55,7 +55,7 @@ int ParseValues(char *spaceSeparatedData) {
 	for (i=0; i<ADC_NUMBER; i++) {
 		for(j=0; j<CHANNELS_PER_ADC; j++) {
 			if (sscanf(spaceSeparatedData + shift, "%lf%n", &ADC_VALUES[i][j], &pos) != 1) {
-				msAddMsg(msGMS(), "%s Error! Unable to parse ADC-%d (channel %d) decimal data.\n", TimeStamp(0), i, j);
+				logMessage("Error! Unable to parse ADC-%d (channel %d) decimal data.\n", i, j);
 				return -1;
 			}
 			shift += pos;	
@@ -66,7 +66,7 @@ int ParseValues(char *spaceSeparatedData) {
 	for (i=0; i<DAC_NUMBER; i++) {
 		for(j=0; j<CHANNELS_PER_DAC; j++) {
 			if (sscanf(spaceSeparatedData + shift, "%lf%n", &DAC_VALUES[i][j], &pos) != 1) {
-				msAddMsg(msGMS(), "%s Error! Unable to parse DAC-%d (channel %d) decimal data.\n", TimeStamp(0), i, j);
+				logMessage("Error! Unable to parse DAC-%d (channel %d) decimal data.\n", i, j);
 				return -1;
 			}
 			shift += pos;	
@@ -75,7 +75,7 @@ int ParseValues(char *spaceSeparatedData) {
 	}
 	
 	if (sscanf(spaceSeparatedData + shift, "%hX%n", &DEVICES_DIAGNOSTICS, &pos) != 1) {
-		msAddMsg(msGMS(), "%s Error! Unable to parse diagnostics hex data.\n", TimeStamp(0));
+		logMessage("Error! Unable to parse diagnostics hex data.\n");
 		return -1;
 	}
 	
@@ -85,7 +85,7 @@ int ParseValues(char *spaceSeparatedData) {
 
 int ParseConnectionState(char *textData) {
 	if (sscanf(textData, "%d", &SERVER_HARDWARE_CONNECTED) != 1) {
-		msAddMsg(msGMS(), "%s Error! Unable to parse server status info.\n", TimeStamp(0));
+		logMessage("Error! Unable to parse server status info.\n");
 		return -1;
 	}
 	return 0;
@@ -100,7 +100,7 @@ int ParseEvents(char *eventsData) {
 	
 	// Get the number of events and flag indicating if more data is available
 	if (sscanf(dataPos, "%d%n", &INTERLOCK_EVENTS_LIST.eventsNumber, &pos) != 1) {
-		msAddMsg(msGMS(), "%s Error! Unable to parse the number of events.\n", TimeStamp(0));
+		logMessage("Error! Unable to parse the number of events.\n");
 		return -1;
 	}
 	dataPos += pos;
@@ -112,7 +112,7 @@ int ParseEvents(char *eventsData) {
 	}
 	
 	if (sscanf(dataPos, "%d%n", &INTERLOCK_EVENTS_LIST.moreAvailable, &pos) != 1) {
-		msAddMsg(msGMS(), "%s Error! Unable to parse the flag indicating if more data is available.\n", TimeStamp(0));
+		logMessage("Error! Unable to parse the flag indicating if more data is available.\n");
 		return -1;
 	}
 	dataPos += pos;
@@ -120,14 +120,14 @@ int ParseEvents(char *eventsData) {
 	// For each event parse the info
 	for (j=0; j<INTERLOCK_EVENTS_LIST.eventsNumber; j++) {
 		if (sscanf(dataPos, "%u%n", &INTERLOCK_EVENTS_LIST.events[j].timeStamp, &pos) != 1) {
-			msAddMsg(msGMS(), "%s Error! Unable to parse timestamp data for event %d (counting from zero).\n", TimeStamp(0), j);
+			logMessage("Error! Unable to parse timestamp data for event %d (counting from zero).\n", j);
 			return -1;
 		}
 		dataPos += pos;
 		
 		for (i=0; i<DI_NUMBER; i++) {
 			if (sscanf(dataPos, "%X%n", &INTERLOCK_EVENTS_LIST.events[j].DI_VALUES[i], &pos) != 1) {
-				msAddMsg(msGMS(), "%s Error! Unable to parse DI-%d hex data for event %d (counting from zero).\n", TimeStamp(0), i, j);
+				logMessage("Error! Unable to parse DI-%d hex data for event %d (counting from zero).\n", i, j);
 				return -1;
 			}
 			dataPos += pos;
@@ -135,7 +135,7 @@ int ParseEvents(char *eventsData) {
 	
 		for (i=0; i<DQ_NUMBER; i++) {
 			if (sscanf(dataPos, "%hX%n", &INTERLOCK_EVENTS_LIST.events[j].DQ_VALUES[i], &pos) != 1) {
-				msAddMsg(msGMS(), "%s Error! Unable to parse DQ-%d hex data for event %d (counting from zero).\n", TimeStamp(0), i, j);
+				logMessage("Error! Unable to parse DQ-%d hex data for event %d (counting from zero).\n", i, j);
 				return -1;
 			}
 			dataPos += pos;

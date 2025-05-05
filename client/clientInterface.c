@@ -555,7 +555,7 @@ int SetDiNames(char *bar_separated_names) {
 	for (i=1; i<DI_NUMBER; i++) {
 		pos = strstr(deviceNamesStartPos[i - 1], "||");
 		if (!pos) {
-			msAddMsg(msGMS(), "%s Error! Unable to parse DI blocks names. Some of the dividers are missing ('||') (between block %d and %d).\n", TimeStamp(0), i-1, i);
+			logMessage("Error! Unable to parse DI blocks names. Some of the dividers are missing ('||') (between block %d and %d).\n", i-1, i);
 			return -1;
 		}
 		
@@ -572,7 +572,7 @@ int SetDiNames(char *bar_separated_names) {
 				pos = strstr(namePos, "|");
 
 				if (!pos) {
-					msAddMsg(msGMS(), "%s Error! Unable to parse DI blocks names. Some of the dividers are missing ('|') (DI block %d, between channels %d and %d).\n", TimeStamp(0), i, j, j+1); 
+					logMessage("Error! Unable to parse DI blocks names. Some of the dividers are missing ('|') (DI block %d, between channels %d and %d).\n", i, j, j+1); 
 					return -1;
 				}
 				pos[0] = 0;
@@ -603,7 +603,7 @@ int SetDqNames(char *bar_separated_names) {
 	for (i=1; i<DQ_NUMBER; i++) {
 		pos = strstr(deviceNamesStartPos[i - 1], "||");
 		if (!pos) {
-			msAddMsg(msGMS(), "%s Error! Unable to parse DQ blocks names. Some of the dividers are missing ('||') (between block %d and %d).\n", TimeStamp(0), i-1, i);
+			logMessage("Error! Unable to parse DQ blocks names. Some of the dividers are missing ('||') (between block %d and %d).\n", i-1, i);
 			return -1;
 		}
 		
@@ -620,7 +620,7 @@ int SetDqNames(char *bar_separated_names) {
 				pos = strstr(namePos, "|");
 
 				if (!pos) {
-					msAddMsg(msGMS(), "%s Error! Unable to parse DQ blocks names. Some of the dividers are missing ('|') (DQ block %d, between channels %d and %d).\n", TimeStamp(0), i, j, j+1); 
+					logMessage("Error! Unable to parse DQ blocks names. Some of the dividers are missing ('|') (DQ block %d, between channels %d and %d).\n", i, j, j+1); 
 					return -1;
 				};
 				pos[0] = 0;
@@ -656,7 +656,7 @@ int SetAdcNames(int adcIndex, char *bar_separated_names) {
 			pos = strstr(namePos, "|");
 
 			if (!pos) {
-				msAddMsg(msGMS(), "%s Error! Unable to parse ADC channels names. Some of the dividers are missing ('|') (ADC %d, between channels %d and %d).\n", TimeStamp(0), adcIndex, i, i+1);
+				logMessage("Error! Unable to parse ADC channels names. Some of the dividers are missing ('|') (ADC %d, between channels %d and %d).\n", adcIndex, i, i+1);
 				return -1;
 			}
 			pos[0] = 0;
@@ -688,7 +688,7 @@ int SetDacNames(int dacIndex, char *bar_separated_names) {
 			pos = strstr(namePos, "|");
 
 			if (!pos) {
-				msAddMsg(msGMS(), "%s Error! Unable to parse DAC channels names. Some of the dividers are missing ('|') (DAC %d, between channels %d and %d).\n", TimeStamp(0), dacIndex, i, i+1);
+				logMessage("Error! Unable to parse DAC channels names. Some of the dividers are missing ('|') (DAC %d, between channels %d and %d).\n", dacIndex, i, i+1);
 				return -1;
 			}
 			pos[0] = 0;
@@ -979,6 +979,15 @@ void CVICALLBACK LoadView (int menuBar, int menuItem, void *callbackData, int pa
 
 void CVICALLBACK ShowHideConsole (int menuBar, int menuItem, void *callbackData, int panel)
 {
+	int visible = 0;
+	
+	GetStdioWindowVisibility(&visible);
+	
+	if (visible) {
+		SetStdioWindowVisibility(0);
+	} else {
+		SetStdioWindowVisibility(1);
+	}
 }
 
 

@@ -544,7 +544,7 @@ int CVICALLBACK tick (int panel, int control, int event,
 				if (connectionWaitTics * TIMER_TICK_TIME >= CFG_SERVER_CONNECTION_INTERVAL) {
 					connectionWaitTics = 0;
 
-					msAddMsg(msGMS(), "%s Connection to the server (\"%s:%d\") ...", TimeStamp(0), CFG_SERVER_IP, CFG_SERVER_PORT);
+					logMessage("Connection to the server (\"%s:%d\") ...", CFG_SERVER_IP, CFG_SERVER_PORT);
 					if (initConnectionToServer() >= 0) {
 						connectionEstablished = 1;
 						RequestNames();
@@ -556,13 +556,14 @@ int CVICALLBACK tick (int panel, int control, int event,
 						
 						SetCtrlVal(mainPanelHandle, clientToServerConnectionLED, 1);
 						SetCtrlAttribute(mainPanelHandle, clientToServerConnectionLED, ATTR_LABEL_TEXT, "Client-Server: online");
-						msAddMsg(msGMS(), "%s Connection to the server is established.", TimeStamp(0));
+						logMessage("Connection to the server is established.");
 					} else {
-						msAddMsg(msGMS(), "%s Connection to the server failed. Next connection request in %.1fs.", TimeStamp(0), CFG_SERVER_CONNECTION_INTERVAL);
+						logMessage("Connection to the server failed. Next connection request in %.1fs.", CFG_SERVER_CONNECTION_INTERVAL);
 					}
 				}
 			}
 			if (msMsgsAvailable(msGMS())) {
+				msPrintMsgs(msGMS(), stdout);
 				WriteLogFiles(msGMS(), CFG_LOG_DIRECTORY, logFileName);
 				msFlushMsgs(msGMS());
 			}
@@ -585,7 +586,7 @@ int clientCallbackFunction(unsigned handle, int xType, int errCode, void * callb
 			
 			SetCtrlVal(mainPanelHandle, clientToServerConnectionLED, 0);
 			SetCtrlAttribute(mainPanelHandle, clientToServerConnectionLED, ATTR_LABEL_TEXT, "Client-Server: offline");
-			msAddMsg(msGMS(), "%s Connection to the server has lost. Next connection request in %.1fs.", TimeStamp(0), CFG_SERVER_CONNECTION_INTERVAL);
+			logMessage("Connection to the server has lost. Next connection request in %.1fs.", CFG_SERVER_CONNECTION_INTERVAL);
 			break;
 		case TCP_DATAREADY:
 			bytesRecv = ClientTCPRead(handle, message, sizeof(message) - 1, 100);
@@ -595,7 +596,7 @@ int clientCallbackFunction(unsigned handle, int xType, int errCode, void * callb
 			pos = strstr(message, "ERROR");
 			
 			if (pos && pos == message) {
-				msAddMsg(msGMS(), "%s Error! Server request failed: %s", TimeStamp(0), message);  // Server answer already contain \n symbol at the end of the string.
+				logMessage("Error! Server request failed: %s", message);  // Server answer already contain \n symbol at the end of the string.
 			} else {
 				//printf("Answer from server: %s\n", message);  // For debugging
 				
@@ -617,7 +618,7 @@ int clientCallbackFunction(unsigned handle, int xType, int errCode, void * callb
 							UpdateAllValues();
 							UpdateAdcGraphs();
 						} else
-							msAddMsg(msGMS(), "%s Error! Unable to parse the following Interlock data: %s.\n", TimeStamp(0), message); 
+							logMessage("Error! Unable to parse the following Interlock data: %s.\n", message); 
 						break;	
 					
 					case CMD_GET_CONNECTION_STATE_ID:
@@ -636,10 +637,10 @@ int clientCallbackFunction(unsigned handle, int xType, int errCode, void * callb
 						break;
 						
 					case -1:
-						msAddMsg(msGMS(), "%s Error! Data recieved while request type is set to -1: %s\n", TimeStamp(0), message); break;
+						logMessage("Error! Data recieved while request type is set to -1: %s\n", message); break;
 						
 					default:
-						msAddMsg(msGMS(), "%s Error! Unhandled request type specified: %d\n", TimeStamp(0), globalRequestState.requestID);
+						logMessage("Error! Unhandled request type specified: %d\n", globalRequestState.requestID);
 				}
 			}
 			
@@ -675,6 +676,12 @@ int main (int argc, char *argv[])
 	// Prepare log and data files names
 	initLogAndDataFilesNames();
 	
+    // Setup the console output
+	SetStdioWindowOptions(2000, 0, 0);
+	SetSystemAttribute(ATTR_TASKBAR_BUTTON_TEXT, "Ecool Interlock");  // FIXME: make consistent with the server
+	SetStdioPort(CVI_STDIO_WINDOW);
+	SetStdioWindowVisibility(0);
+
 	msInitGlobalStack();
 	msAddMsg(msGMS(), "-------------\n[NEW SESSION]\n-------------");
 	

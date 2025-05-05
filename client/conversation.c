@@ -124,7 +124,7 @@ int sendRequestIfAvailable(int serverHandle) {
 	command = pRequestRecord->requestBody;
 	
 	if (ClientTCPWrite(serverHandle, command, strlen(command), 10) < 0) {
-		msAddMsg(msGMS(), "%s Error! Unable to send the following command to the Interlock server: %s.\n", TimeStamp(0), command);
+		logMessage("Error! Unable to send the following command to the Interlock server: %s.\n", command);
 		return 0;
 	}
 	
