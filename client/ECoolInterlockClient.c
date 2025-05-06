@@ -67,8 +67,6 @@ void DiscardAllResources(void);
 void assembleDataForLogging(char * target);
 
 /// HIFN The main entry-point function.
-#define configFile "ecool-interlock-client-config.ini"
-
 
 void DiscardAllResources(void) {
 	int i,j; 
@@ -670,9 +668,22 @@ int CVICALLBACK mainSystemCallback (int handle, int control, int event, void *ca
 
 int main (int argc, char *argv[])
 {
+	#define defaultConfigFile "ecool-interlock-client-config.ini"
+
     int error = 0;
+	char title[256], configFilePath[1024];
 	
-	ConfigurateClient(configFile);
+	//// Load configuration
+	switch (argc) {
+	    case 1: strcpy(configFilePath, defaultConfigFile); break;
+		case 2: strcpy(configFilePath, argv[1]); break;
+		default:
+			MessagePopup("Command line arguments error", "Incorrect number of arguments");
+			exit(1);
+	}
+
+	ConfigurateClient(configFilePath);
+
 	// Prepare log and data files names
 	initLogAndDataFilesNames();
 	
@@ -683,6 +694,7 @@ int main (int argc, char *argv[])
 	SetStdioWindowVisibility(0);
 
 	msInitGlobalStack();
+	msAddMsg(msGMS(), "Configuration file: %s", configFilePath);
 	msAddMsg(msGMS(), "-------------\n[NEW SESSION]\n-------------");
 	
 	// Force the app to connect to the server immediately  
