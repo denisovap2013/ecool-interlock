@@ -56,6 +56,7 @@ extern int adcGraphCallButtons[ADC_NUMBER][CHANNELS_PER_ADC];
 extern int adcGraphPanels[ADC_NUMBER][CHANNELS_PER_ADC];
 extern int adcFieldsHandles[ADC_NUMBER][CHANNELS_PER_ADC];
 extern char adcTextLabels[ADC_NUMBER][CHANNELS_PER_ADC][256];
+extern double adcGraphRanges[ADC_NUMBER][CHANNELS_PER_ADC][2];
 
 // DAC blocks gui
 extern int dacFieldsHandles[DAC_NUMBER][CHANNELS_PER_DAC];
@@ -91,6 +92,12 @@ void UpdateConnectionStateIndicator(void);
 
 void PrintTheEventsList(void);
 void UpdateTheEventsIndicators(int eventId);
+
+void UpdateAdcGraphTitle(int adcBlockIndex, int channelIndex);
+void ShowAdcGraphWindow(int adcBlockIndex, int channelIndex);
+void UpdateAdcGraphPlotRange(int adcBlockIndex, int channelIndex);
+void CloseAdcGraphWindow(int adcBlockIndex, int channelIndex);
+void PlaceAdcGraphWindow(int adcBlockIndex, int channelIndex, int top, int left, int width, int height);
 
 
 #endif  /* ndef __clientInterface_H__ */

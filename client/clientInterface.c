@@ -14,6 +14,7 @@
 #include <utility.h>
 #include <userint.h>
 #include <ansi_c.h>
+#include "inifile.h"
 
 #include "clientInterface.h"
 #include "ECoolInterlockClient.h"
@@ -67,6 +68,7 @@ int adcGraphCallButtons[ADC_NUMBER][CHANNELS_PER_ADC];
 int adcGraphPanels[ADC_NUMBER][CHANNELS_PER_ADC];
 int adcFieldsHandles[ADC_NUMBER][CHANNELS_PER_ADC]; 
 char adcTextLabels[ADC_NUMBER][CHANNELS_PER_ADC][256];
+double adcGraphRanges[ADC_NUMBER][CHANNELS_PER_ADC][2];
 
 // DAC blocks gui
 int dacFieldsHandles[DAC_NUMBER][CHANNELS_PER_DAC];
@@ -399,6 +401,9 @@ int setupBlocksPanels(void) {
 		yPos = 5; 
 		for (j=0; j<CHANNELS_PER_ADC; j++) {
 			adcGraphPanels[i][j] = -1;	
+			adcGraphRanges[i][j][0] = 0;
+			adcGraphRanges[i][j][1] = 1;
+
 			adcGraphCallButtons[i][j] = NewCtrl(adcPanelHandles[i], CTRL_SQUARE_COMMAND_BUTTON_LS, "Gr", yPos, 5);
 			SetCtrlAttribute(adcPanelHandles[i], adcGraphCallButtons[i][j], ATTR_HEIGHT, ADC_BUTTON_HEIGHT);
 			SetCtrlAttribute(adcPanelHandles[i], adcGraphCallButtons[i][j], ATTR_WIDTH, ADC_BUTTON_WIDTH); 
@@ -512,7 +517,6 @@ int setupEventsPanel(void) {
 
 int CVICALLBACK adcGraphButtonCallback (int panel, int control, int event, void *callbackData, int eventData1, int eventData2) {
 	int i,j;
-	char graphTitle[256];
 	
 	switch (event) {
 		case EVENT_COMMIT:
@@ -524,14 +528,7 @@ int CVICALLBACK adcGraphButtonCallback (int panel, int control, int event, void 
 			
 			for (j=0; j<CHANNELS_PER_ADC; j++) {
 				if (adcGraphCallButtons[i][j] == control) {
-					if (adcGraphPanels[i][j] < 0) {
-						adcGraphPanels[i][j] = LoadPanel(0, "ECoolInterlockClient.uir", Graph);
-						if (adcGraphPanels[i][j] < 0) break;
-						sprintf(graphTitle, "ADC %d - channel %d: %s", i+1, j, adcTextLabels[i][j]);
-						SetPanelAttribute(adcGraphPanels[i][j], ATTR_TITLE, graphTitle);
-						DisplayPanel(adcGraphPanels[i][j]);
-					}
-					DisplayPanel(adcGraphPanels[i][j]);
+					ShowAdcGraphWindow(i, j);
 					break;
 				}
 			}
@@ -792,6 +789,78 @@ void UpdateConnectionStateIndicator(void) {
 }
 
 
+void UpdateAdcGraphTitle(int adcBlockIndex, int channelIndex) {
+	char graphTitle[256];
+	if (adcGraphPanels[adcBlockIndex][channelIndex] < 0) return;
+	sprintf(graphTitle, "ADC %d - channel %d: %s", adcBlockIndex+1, channelIndex, adcTextLabels[adcBlockIndex][channelIndex]);
+	SetPanelAttribute(adcGraphPanels[adcBlockIndex][channelIndex], ATTR_TITLE, graphTitle);
+}
+
+
+void ShowAdcGraphWindow(int adcBlockIndex, int channelIndex) {
+	int i, j;
+	
+	i = adcBlockIndex;
+	j = channelIndex;
+	
+	if (adcGraphPanels[i][j] < 0) {
+		adcGraphPanels[i][j] = LoadPanel(0,"ECoolInterlockClient.uir",Graph);
+		if (adcGraphPanels[i][j] < 0) return;
+	}
+	UpdateAdcGraphTitle(i, j); 
+	UpdateAdcGraphPlotRange(i, j);
+
+	DisplayPanel(adcGraphPanels[i][j]);	
+}
+
+
+void UpdateAdcGraphPlotRange(int adcBlockIndex, int channelIndex) {
+	int i, j;
+	
+	i = adcBlockIndex;
+	j = channelIndex;
+	
+	if (adcGraphPanels[i][j] >= 0) {
+		SetAxisScalingMode(
+			adcGraphPanels[i][j],
+			Graph_GRAPH,
+			VAL_LEFT_YAXIS,
+			VAL_MANUAL,
+			adcGraphRanges[i][j][0],
+			adcGraphRanges[i][j][1]
+		);
+						
+		SetCtrlVal(adcGraphPanels[i][j], Graph_minValue, adcGraphRanges[i][j][0]);
+		SetCtrlVal(adcGraphPanels[i][j], Graph_maxValue, adcGraphRanges[i][j][1]);
+	}
+}
+
+
+void CloseAdcGraphWindow(int adcBlockIndex, int channelIndex) {
+	int panel;
+	
+	panel = adcGraphPanels[adcBlockIndex][channelIndex];
+	
+	if (panel >= 0) {
+		DiscardPanel(panel);
+    	adcGraphPanels[adcBlockIndex][channelIndex] = -1;
+	}
+}
+
+
+void PlaceAdcGraphWindow(int adcBlockIndex, int channelIndex, int top, int left, int width, int height) {
+	int panel;
+	
+	panel = adcGraphPanels[adcBlockIndex][channelIndex];
+	if (panel < 0) return;
+	
+	SetPanelAttribute(panel, ATTR_TOP, top);
+	SetPanelAttribute(panel, ATTR_LEFT, left);
+	SetPanelAttribute(panel, ATTR_WIDTH, width);
+	SetPanelAttribute(panel, ATTR_HEIGHT, height);
+}
+
+
 int CVICALLBACK _toCur (int panel, int control, int event,
 		void *callbackData, int eventData1, int eventData2)
 {
@@ -840,7 +909,6 @@ int  CVICALLBACK requestEvents(int panel, int control, int event, void *callback
 
 
 int  CVICALLBACK clearEventsList(int panel, int control, int event, void *callbackData, int eventData1, int eventData2) {
-	char command[128];
 
 	switch (event)
 	{
@@ -967,13 +1035,224 @@ void CVICALLBACK ShowEventsWindow (int menuBar, int menuItem, void *callbackData
 }
 
 
+void savePosOfBlocks(IniText iniText, int blocks_num, int *blocks_list, char * block_base_name) {
+	char section[256];
+	int val_int, blockIndex;
+
+	for (blockIndex=0; blockIndex < blocks_num; blockIndex++) {
+        // Save visibility and position of the window itself
+		sprintf(section, "%s-block-%d", block_base_name, blockIndex);
+		GetPanelAttribute(blocks_list[blockIndex], ATTR_TOP, &val_int);
+		Ini_PutInt(iniText, section, "top", val_int);
+		GetPanelAttribute(blocks_list[blockIndex], ATTR_LEFT, &val_int);
+		Ini_PutInt(iniText, section, "left", val_int);
+		GetPanelAttribute(blocks_list[blockIndex], ATTR_VISIBLE, &val_int);
+		Ini_PutInt(iniText, section, "visible", val_int);
+	}
+}
+
+int loadPosOfBlocks(IniText iniText, int blocks_num, int *blocks_list, char * block_base_name) {
+    char section[256];
+	int val_int, blockIndex;
+	char msg[256];  
+
+	#define STOP_CFG(s, k) sprintf(msg, "Cannot read '%s' from the '%s' section.", (k), (s)); MessagePopup("View configuration Error", msg); Ini_Dispose(iniText); return -1;
+    #define READ_CFG_INT(s, k, var) if(Ini_GetInt(iniText, (s), (k), &(var)) <= 0) {STOP_CFG((s), (k));}
+	
+	for (blockIndex=0; blockIndex < blocks_num; blockIndex++) {
+        // Save visibility and position of the window itself
+		sprintf(section, "%s-block-%d", block_base_name, blockIndex);
+		
+		READ_CFG_INT(section, "top", val_int);
+		SetPanelAttribute(blocks_list[blockIndex], ATTR_TOP, val_int);
+
+		READ_CFG_INT(section, "left", val_int);
+		SetPanelAttribute(blocks_list[blockIndex], ATTR_LEFT, val_int);
+
+		READ_CFG_INT(section, "visible", val_int);
+		SetPanelAttribute(blocks_list[blockIndex], ATTR_VISIBLE, val_int);
+	}
+	
+	return 0;
+}
+
+
 void CVICALLBACK SaveView (int menuBar, int menuItem, void *callbackData, int panel)
 {
+	int blockIndex, chIndex;
+	char file_path[1024];
+	IniText iniText; 
+	char section[256];
+	int val_int, handle;
+	
+	if (FileSelectPopup("", "*.view", "*.view", "Select the view file", VAL_SAVE_BUTTON, 0, 1, 1, 1, file_path) == 0) return;
+	
+	iniText = Ini_New(0);
+	
+	// Save app identifier for the view
+	Ini_PutString(iniText, "General", "app", "ecool-interlock-client");
+	
+	strcpy(section, "MainWindow");
+	// Save main window parameters
+	// left, top
+	GetPanelAttribute(mainPanelHandle, ATTR_TOP, &val_int);
+	Ini_PutInt(iniText, section, "top", val_int);
+	GetPanelAttribute(mainPanelHandle, ATTR_LEFT, &val_int);
+	Ini_PutInt(iniText, section, "left", val_int);
+	
+	// Save the position and visibility of each DI, DQ, ADC and DAC blocks
+	savePosOfBlocks(iniText, DI_NUMBER, diPanelHandles, "di");
+	savePosOfBlocks(iniText, DQ_NUMBER, dqPanelHandles, "dq");
+	savePosOfBlocks(iniText, ADC_NUMBER, adcPanelHandles, "adc");
+	savePosOfBlocks(iniText, DAC_NUMBER, dacPanelHandles, "dac");
+
+	// Save parameters of the graph windows of each ADC block
+	for (blockIndex=0; blockIndex < ADC_NUMBER; blockIndex++) {
+		// Get the parameters of each graph plot
+		for (chIndex=0; chIndex < CHANNELS_PER_ADC; chIndex++) {
+			handle = adcGraphPanels[blockIndex][chIndex];
+			
+			sprintf(section, "adc-block-%d-plot-%d", blockIndex, chIndex);
+			Ini_PutInt(iniText, section, "opened", handle >= 0);
+			
+			if (handle < 0) {
+			    // Window is closed	
+				Ini_PutInt(iniText, section, "visible", 0);
+				Ini_PutInt(iniText, section, "top", 0);
+				Ini_PutInt(iniText, section, "left", 0);
+				Ini_PutInt(iniText, section, "width", 0);
+				Ini_PutInt(iniText, section, "height", 0);
+
+				// Ranges
+				Ini_PutDouble(iniText, section, "min", adcGraphRanges[blockIndex][chIndex][0]);
+				Ini_PutDouble(iniText, section, "max", adcGraphRanges[blockIndex][chIndex][1]);
+			} else {
+			    // Window is opened
+				
+				// Visibility, position and size 
+				GetPanelAttribute(handle, ATTR_VISIBLE, &val_int);
+				Ini_PutInt(iniText, section, "visible", val_int);
+				GetPanelAttribute(handle, ATTR_TOP, &val_int);
+				Ini_PutInt(iniText, section, "top", val_int);
+				GetPanelAttribute(handle, ATTR_LEFT, &val_int);
+				Ini_PutInt(iniText, section, "left", val_int);
+				GetPanelAttribute(handle, ATTR_WIDTH, &val_int); 
+				Ini_PutInt(iniText, section, "width", val_int);
+				GetPanelAttribute(handle, ATTR_HEIGHT, &val_int); 
+				Ini_PutInt(iniText, section, "height", val_int);
+				
+				// Ranges
+				Ini_PutDouble(iniText, section, "min", adcGraphRanges[blockIndex][chIndex][0]);
+				Ini_PutDouble(iniText, section, "max", adcGraphRanges[blockIndex][chIndex][1]);
+			}
+			
+		}
+
+	}
+	
+	// Trying to open the file for writing
+	if( Ini_WriteToFile(iniText, file_path) < 0 ) {
+		MessagePopup("Unable to save the program's view", "Unable to open the specified file for writing.");
+		Ini_Dispose(iniText);
+		return;
+	}
+	
+	logMessage("Saved program's view to '%s'", file_path);
+	
+	// Free the resources
+	Ini_Dispose(iniText);
 }
 
 
 void CVICALLBACK LoadView (int menuBar, int menuItem, void *callbackData, int panel)
 {
+	int blockIndex, chIndex;
+	char file_path[1024];
+	char app_name[256], msg[256];
+	IniText iniText; 
+	char section[256];
+
+	int visible, top, left, width, height, opened;
+
+	if (FileSelectPopup("", "*.view", "*.view", "Select the view file", VAL_LOAD_BUTTON, 0, 1, 1, 1, file_path) == 0) return; 
+	
+	iniText = Ini_New(0);
+	
+	#define STOP_CONFIGURATION(s, k) sprintf(msg, "Cannot read '%s' from the '%s' section.", (k), (s)); MessagePopup("View configuration Error", msg); Ini_Dispose(iniText); return;
+    #define READ_INT(s, k, var) if(Ini_GetInt(iniText, (s), (k), &(var)) <= 0) {STOP_CONFIGURATION((s), (k));}
+	#define READ_DOUBLE(s, k, var) if(Ini_GetDouble(iniText, (s), (k), &(var)) <= 0) {STOP_CONFIGURATION((s), (k));}
+	
+	// Trying to open the file for reading
+	if( Ini_ReadFromFile(iniText, file_path) != 0 ) {
+		MessagePopup("Unable to load the program's view", "Unable to open the specified file for reading.");
+		Ini_Dispose(iniText);
+		return;
+	}
+	
+	logMessage("Loading the program's view from '%s'", file_path);
+	
+	// Load and chech the app identifier for the view
+	Ini_GetStringIntoBuffer(iniText, "General", "app", app_name, 256);
+	if (strcmp(app_name, "ecool-interlock-client") != 0) {
+		logMessage("Unable to load the program's view. Expected app name 'ecool-interlock-client', got '%s'", app_name);
+	    MessagePopup("Unable to load the program's view", "The program app type is incorrect. Expected 'ecool-interlock-client'.");
+		Ini_Dispose(iniText);
+		return;	
+	}
+	
+	// Load parameters of the main window (left, top, number of blocks)
+	strcpy(section, "MainWindow");
+	
+	READ_INT(section, "top", top);
+	READ_INT(section, "left", left);
+	SetPanelAttribute(mainPanelHandle, ATTR_TOP, top);
+	SetPanelAttribute(mainPanelHandle, ATTR_LEFT, left);
+	
+	// Load the position and visibility of each DI, DQ, ADC and DAC blocks
+	// (the disposal if the ini file parser is handled by the called function.)
+	if (loadPosOfBlocks(iniText, DI_NUMBER, diPanelHandles, "di") < 0) return;
+	if (loadPosOfBlocks(iniText, DQ_NUMBER, dqPanelHandles, "dq") < 0) return;  
+	if (loadPosOfBlocks(iniText, ADC_NUMBER, adcPanelHandles, "adc") < 0) return;  
+	if (loadPosOfBlocks(iniText, DAC_NUMBER, dacPanelHandles, "dac") < 0) return;  
+	
+	// Load parameters of the graph windows of each ADC block 
+	for (blockIndex=0; blockIndex < ADC_NUMBER; blockIndex++) {
+		
+		// Setup graph windows for each block
+		for (chIndex=0; chIndex < CHANNELS_PER_ADC; chIndex++) {
+			sprintf(section, "adc-block-%d-plot-%d", blockIndex, chIndex);
+			
+			// Read ranges
+			READ_DOUBLE(section, "min", adcGraphRanges[blockIndex][chIndex][0]);
+			READ_DOUBLE(section, "max", adcGraphRanges[blockIndex][chIndex][1]);
+			
+			// Read visibility
+		    READ_INT(section, "visible", visible);
+			READ_INT(section, "opened", opened);
+			
+			// If visible, display the window, if it is not yet displayed. Otherwise, close the window.
+			if (opened) {
+				ShowAdcGraphWindow(blockIndex, chIndex);
+				
+				READ_INT(section, "top", top);
+				READ_INT(section, "left", left);
+				READ_INT(section, "width", width);
+				READ_INT(section, "height", height);
+				
+				PlaceAdcGraphWindow(blockIndex, chIndex, top, left, width, height);
+				
+				if (!visible) {
+					HidePanel(adcGraphPanels[blockIndex][chIndex]);
+				}
+			} else {
+				CloseAdcGraphWindow(blockIndex, chIndex);	
+			}
+		}
+	}
+	
+	// Finish the loading
+	Ini_Dispose(iniText);
+	return;
 }
 
 

@@ -411,25 +411,39 @@ int CVICALLBACK graphVerticalRange (int panel, int control, int event,
 {
 	double ymin, ymax;
 	double buf;
+	int blockIndex, chIndex;
+
 	switch (event)
 	{
 		case EVENT_COMMIT:
-			GetCtrlVal(panel, Graph_maxValue, &ymax);
-			GetCtrlVal(panel, Graph_minValue, &ymin);
-			if (ymax < ymin)  {
-				buf = ymax;
-				ymax = ymin;
-				ymin = buf;
-				SetCtrlVal(panel, Graph_maxValue, ymax);
-				SetCtrlVal(panel, Graph_minValue, ymin);
-			}
+			// Get block and channel index of the corresponding window, and apply the range modifications
+			for (blockIndex=0; blockIndex < ADC_NUMBER; blockIndex++) {
+				for (chIndex=0; chIndex < CHANNELS_PER_ADC; chIndex++) {
+					if (adcGraphPanels[blockIndex][chIndex] == panel) { 
+						GetCtrlVal(panel, Graph_maxValue, &ymax);
+						GetCtrlVal(panel, Graph_minValue, &ymin);
+						if (ymax < ymin)  {
+							buf = ymax;
+							ymax = ymin;
+							ymin = buf;
+							SetCtrlVal(panel, Graph_maxValue, ymax);
+							SetCtrlVal(panel, Graph_minValue, ymin);
+						}
 			
-			if (ymax == ymin) {
-				ymax += 1;
-				SetCtrlVal(panel,Graph_maxValue,ymax);
+						if (ymax == ymin) {
+							ymax += 1;
+							SetCtrlVal(panel, Graph_maxValue, ymax);
+						}
+					
+						// Update the variables, containing the ranges
+						adcGraphRanges[blockIndex][chIndex][0] = ymin;
+						adcGraphRanges[blockIndex][chIndex][1] = ymax;
+					
+						UpdateAdcGraphPlotRange(blockIndex, chIndex);
+						return 0; // No need to check other panels as the panel handles are unique
+					}
+				}
 			}
-			
-			SetAxisScalingMode(panel,Graph_GRAPH,VAL_LEFT_YAXIS,VAL_MANUAL,ymin,ymax);
 			break;
 	}	 
 	return 0;
@@ -440,20 +454,34 @@ int  CVICALLBACK fitPlotButtonCallback(int panel, int control, int event,
 {
 	double ymin, ymax, diff;
 	int axisMode;
+	int blockIndex, chIndex;
+
 	switch (event)
 	{
 		case EVENT_COMMIT:
-			SetAxisScalingMode(panel, Graph_GRAPH, VAL_LEFT_YAXIS, VAL_AUTOSCALE, 0, 0);
-			ProcessDrawEvents();  
-			GetAxisScalingMode(panel, Graph_GRAPH, VAL_LEFT_YAXIS, &axisMode, &ymin, &ymax); 
-			
-			diff = ymax - ymin;
-			ymax += diff * 0.1;
-			ymin -= diff * 0.1;
-			
-			SetAxisScalingMode(panel, Graph_GRAPH, VAL_LEFT_YAXIS, VAL_MANUAL, ymin, ymax); 
-			SetCtrlVal(panel, Graph_maxValue, ymax);
-			SetCtrlVal(panel, Graph_minValue, ymin);
+			// Get block and channel index of the corresponding window, and apply the auto scale
+			for (blockIndex=0; blockIndex < ADC_NUMBER; blockIndex++) {
+				for (chIndex=0; chIndex < CHANNELS_PER_ADC; chIndex++) {
+					if (adcGraphPanels[blockIndex][chIndex] == panel) {
+						// Remove the limits and draw the whole graph to get the limits using CVI.
+						SetAxisScalingMode(panel, Graph_GRAPH, VAL_LEFT_YAXIS, VAL_AUTOSCALE, 0, 0);
+						ProcessDrawEvents();  
+						GetAxisScalingMode(panel, Graph_GRAPH, VAL_LEFT_YAXIS, &axisMode, &ymin, &ymax);
+						
+						// Get the range width and add a little margin
+						diff = ymax - ymin;
+						ymax += diff * 0.1;
+						ymin -= diff * 0.1;
+						
+						// Update the variables, containing the ranges
+						adcGraphRanges[blockIndex][chIndex][0] = ymin;
+						adcGraphRanges[blockIndex][chIndex][1] = ymax;
+
+						UpdateAdcGraphPlotRange(blockIndex, chIndex);
+						return 0; // No need to check other panels as the panel handles are unique
+					}
+				}
+			}
 			break;
 	}	 
 	return 0;		
