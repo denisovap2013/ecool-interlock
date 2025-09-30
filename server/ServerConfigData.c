@@ -12,8 +12,6 @@ char	CFG_UBS_DAC_NAMES[1][4][256];
 
 char 	CFG_UBS_DI_NAMES[2][32][256];
 char 	CFG_UBS_DQ_NAMES[3][16][256];
-
-int		CFG_LOG_ADDRESS;
 	
 // UBS connection parameters
 char 	CFG_UBS_CONNECTION_IP[256];
@@ -126,9 +124,8 @@ void InitServerConfig(char * configPath) {
 	////////////////////////////////////////////////////
 	// UBS_BLOCK_LOG //
 	//////////////////////////////////////////////////// 
-
-	// Log address in the UBS block buffer
-	READ_INT(UBS_BLOCK_LOG, "logAddress", CFG_LOG_ADDRESS);
+	
+	//     Add parameters reading here
 	
 	////////////////////////////////////////////////////
 	// UBS_REQUESTS //
@@ -240,5 +237,9 @@ void InitServerConfig(char * configPath) {
 			}
 		}
 	}
+	
+#ifdef __VERBOSE__
+	printf("[VERBOSE] Configuration is initialized.\n");
+#endif
 
 }

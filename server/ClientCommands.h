@@ -62,6 +62,10 @@
 
 #define CMD_P_GET_EVENTS "INTERLOCK:GET:EVENTS"
 #define CMD_A_GET_EVENTS "UBS:GET:EVENTS"
+		
+#define CMD_P_GET_EVENTS_NUM "INTERLOCK:GET:EVENTS:NUM"
+#define CMD_P_GET_EVENT_BY_IDX "INTERLOCK:GET:EVENT:BYIDX"
+#define CMD_P_CLEAR_EVENTS_BUFFER "INTERLOCK:SET:EVENTS:CLEAR"
 
 //==============================================================================
 // Types
@@ -101,6 +105,10 @@ int cmdParserGetDacNames(char *, char *, char *);
 int cmdParserGetConnectinState(char *, char *, char *);
 
 int cmdParserGetEvents(char *, char *, char *);
+
+int cmdParserGetEventsNum(char *, char *, char *); 
+int cmdParserGetEventByIdx(char *, char *, char *); 
+int cmdParserClearEventsBuffer(char *, char *, char *); 
 
 void FormatDiNames(unsigned int diIndex, char *outputBuffer);
 void FormatAllDiNames(char *outputBuffer);

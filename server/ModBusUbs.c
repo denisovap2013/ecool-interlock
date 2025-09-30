@@ -261,7 +261,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 						// TODO: maybe check the response	
 					
 					} else if (transactionID == TRANSACTION_CODE_UBS_READ_LOG_STATE) {  // Processing the UBS log state 
-						newLogState = parseUbsLogState(messageBody + 2);
+						newLogState = parseUbsLogInfo(messageBody + 2);
 						pModbusBlockData->logInfo.logState = newLogState;
 						
 						if (SetLogReadingStatus(&pModbusBlockData->logInfo)) {
@@ -397,13 +397,20 @@ ubs_processed_data_t parseUbsData(unsigned char * byteArray) {
 }
 
 
-ubs_log_state_t parseUbsLogState(unsigned char * byteArray) {
+ubs_log_state_t parseUbsLogInfo(unsigned char * byteArray) {
 	ubs_log_state_t logState;
 	
 	logState.startAddress = getWordFromBigEndian(*(unsigned short*)(byteArray)); 
 	logState.endAddress = getWordFromBigEndian(*(unsigned short*)(byteArray + 2));
 	logState.maxAddress = getWordFromBigEndian(*(unsigned short*)(byteArray + 4));
 	logState.pageSize = getWordFromBigEndian(*(unsigned short*)(byteArray + 6));
+	logState.pagesAddress = getWordFromBigEndian(*(unsigned short*)(byteArray + 8)); 
+	logState.startAddressForAlignment = getWordFromBigEndian(*(unsigned short*)(byteArray + 10));
+	
+	// Check that the current size and address of log pages match the specification
+	// for which the log-decoding was implemented.
+	logState.pageSize_valid = logState.pageSize == MB_LOG_PAGE_SIZE;
+	logState.pagesAddress_valid = logState.pagesAddress == MB_LOG_DATA_ADDR;
 	
 	return logState;
 }
@@ -476,14 +483,14 @@ void requestUbsData(unsigned int conversationHandle) {
 }
 
 
-void requestLogState(unsigned int conversationHandle) {
+void requestLogInfo(unsigned int conversationHandle) {
 	unsigned short requestBody[6];
 
 	requestBody[0] = getBigEndianWord(TRANSACTION_CODE_UBS_READ_LOG_STATE);   // transaction ID 
 	requestBody[1] = getBigEndianWord(0);								// something that must be always zero
 	requestBody[2] = getBigEndianWord(6);								// word, describing the number of bytes of the rest of the message 
 	requestBody[3] = getBigEndianWord((255 << 8) | 3);				 	// Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
-	requestBody[4] = getBigEndianWord(CFG_LOG_ADDRESS);						// The word defining the start address 
+	requestBody[4] = getBigEndianWord(MB_LOG_DATA_ADDR);				// The word defining the start address 
 	requestBody[5] = getBigEndianWord(4);							 	// Word defining the number of words to read from the UBS module
 	
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
@@ -502,8 +509,8 @@ void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * 
 	requestBody[2] = getBigEndianWord(6);								// word, describing the number of bytes of the rest of the message 
 	requestBody[3] = getBigEndianWord((255 << 8) | 3);				 	// Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
 	
-	// The word defining the start address 
-	requestBody[4] = getBigEndianWord(CFG_LOG_ADDRESS + 4 + logInfo->currentPageIndex * logInfo->logState.pageSize);					
+	// The word defining the start address of the log page with regard to the start address of the log data..
+	requestBody[4] = getBigEndianWord(MB_LOG_DATA_ADDR + 4 + logInfo->currentPageIndex * logInfo->logState.pageSize);					
 	
 	requestBody[5] = getBigEndianWord(logInfo->logState.pageSize);	 			// Word defining the number of words to read from the UBS module
 	
@@ -523,7 +530,7 @@ int requestUbsLogReset(unsigned int conversationHandle) {
 	requestBodyBasePart[1] = getBigEndianWord(0);								 // something that must be always zero
 	requestBodyBasePart[2] = getBigEndianWord(11);								 // word, describing the number of bytes of the rest of the message 
 	requestBodyBasePart[3] = getBigEndianWord((255 << 8) | 0x10);				 // Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
-	requestBodyBasePart[4] = getBigEndianWord(CFG_LOG_ADDRESS);					 	 // The word defining the start address 
+	requestBodyBasePart[4] = getBigEndianWord(MB_LOG_DATA_ADDR);				 // The word defining the start address of the log data
 	requestBodyBasePart[5] = getBigEndianWord(2);							     // Word defining the number of words to write
 	
 	// Copy the data to a bytes array

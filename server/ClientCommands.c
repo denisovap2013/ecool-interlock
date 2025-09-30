@@ -73,6 +73,10 @@ void InitCommandParsers(void) {
 	registerCommandParser(CMD_P_GET_DAC_NAMES, CMD_A_GET_DAC_NAMES, cmdParserGetDacNames);
 	registerCommandParser(CMD_P_GET_CONNECTION_STATE, CMD_A_GET_CONNECTION_STATE, cmdParserGetConnectinState);
 	registerCommandParser(CMD_P_GET_EVENTS, CMD_A_GET_EVENTS, cmdParserGetEvents);
+	
+	registerCommandParser(CMD_P_GET_EVENTS_NUM, 0, cmdParserGetEventsNum);
+	registerCommandParser(CMD_P_GET_EVENT_BY_IDX, 0, cmdParserGetEventByIdx);
+	registerCommandParser(CMD_P_CLEAR_EVENTS_BUFFER, 0, cmdParserClearEventsBuffer);
 }
 
 void ReleaseCommandParsers(void) {
@@ -397,6 +401,21 @@ int cmdParserGetEvents(char *commandBody, char *answerBuffer, char *ip) {
 
 	sprintf(answerBuffer, "Unable to read the events data. See server logs.");	
 	return -1;
+}
+
+
+int cmdParserGetEventsNum(char *commandBody, char *answerBuffer, char *ip) {
+    return 1;	
+}
+
+
+int cmdParserGetEventByIdx(char *commandBody, char *answerBuffer, char *ip) {
+	return 1;
+}
+
+
+int cmdParserClearEventsBuffer(char *commandBody, char *answerBuffer, char *ip) {
+	return 1;
 }
 
 

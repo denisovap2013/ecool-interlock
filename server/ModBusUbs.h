@@ -31,6 +31,12 @@
 #define DQ_NUMBER 3
 #define OP_NUMBER 5
 		
+#define MB_LOG_INFO_ADDR 81
+#define MB_LOG_DATA_ADDR 300
+// Each log page occupies 13 words
+#define MB_LOG_PAGE_SIZE 13
+#define MB_LOG_DATA_MAX_ADDR 32499
+		
 //==============================================================================
 // Types
 typedef struct modbus_connection_info
@@ -90,7 +96,11 @@ typedef struct ubs_log_state {
 	unsigned short startAddress;
 	unsigned short endAddress;
 	unsigned short maxAddress;
-	unsigned short pageSize;	
+	unsigned short pageSize;
+	unsigned short pagesAddress;
+	unsigned short startAddressForAlignment;
+	unsigned short pageSize_valid;
+	unsigned short pagesAddress_valid;
 } ubs_log_state_t;
 
 
@@ -130,13 +140,13 @@ int SetLogReadingStatus(ubs_log_info_t * ubsLogInfo);
 int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * callbackData);
 
 void requestUbsData(unsigned int conversationHandle);
-void requestLogState(unsigned int conversationHandle);
+void requestLogInfo(unsigned int conversationHandle);
 void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * logInfo);
 int requestUbsLogReset(unsigned int conversationHandle);
 int writeUbsDAC(unsigned int conversationHandle, unsigned int dacIndex, unsigned int dacChannelIndex, double dacChannelVoltage);
 
 ubs_processed_data_t parseUbsData(unsigned char * byteArray);
-ubs_log_state_t parseUbsLogState(unsigned char * byteArray);
+ubs_log_state_t parseUbsLogInfo(unsigned char * byteArray);
 ubs_log_page_t parseLogPageData(unsigned char * byteArray);
 
 double adcRawToVoltage_mV(unsigned short channelType, unsigned short rawValue);

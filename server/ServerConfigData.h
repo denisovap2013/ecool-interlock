@@ -22,7 +22,6 @@ extern char		CFG_UBS_DAC_NAMES[1][4][256];
 
 extern char 	CFG_UBS_DI_NAMES[2][32][256];
 extern char 	CFG_UBS_DQ_NAMES[3][16][256];
-extern int	    CFG_LOG_ADDRESS;
 	
 // UBS connection parameters
 extern char 	CFG_UBS_CONNECTION_IP[256];

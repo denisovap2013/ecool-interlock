@@ -120,7 +120,7 @@ void ubsBlockReadData(int handle, int arg1) {
 
 void ubsBlockReadLogInfo(int handle, int arg1) {
 	if (modbusBlockData.connectionInfo.connected && !modbusBlockData.logInfo.currentlyReading) {
-		requestLogState(modbusBlockData.connectionInfo.conversationHandle);
+		requestLogInfo(modbusBlockData.connectionInfo.conversationHandle);
 	}
 }
 
