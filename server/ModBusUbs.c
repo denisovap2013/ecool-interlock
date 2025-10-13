@@ -490,12 +490,12 @@ void requestLogInfo(unsigned int conversationHandle) {
 	requestBody[1] = getBigEndianWord(0);								// something that must be always zero
 	requestBody[2] = getBigEndianWord(6);								// word, describing the number of bytes of the rest of the message 
 	requestBody[3] = getBigEndianWord((255 << 8) | 3);				 	// Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
-	requestBody[4] = getBigEndianWord(MB_LOG_DATA_ADDR);				// The word defining the start address 
+	requestBody[4] = getBigEndianWord(MB_LOG_INFO_ADDR);				// The word defining the start address 
 	requestBody[5] = getBigEndianWord(4);							 	// Word defining the number of words to read from the UBS module
 	
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the log state read request to the UBS module: %s", GetTCPSystemErrorString());	
-	}	
+	}
 }
 
 
@@ -516,7 +516,7 @@ void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * 
 	
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) <= 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the log pages read request to the UBS module: %s", GetTCPSystemErrorString());	
-	}	
+	}
 }
 
 
@@ -530,7 +530,7 @@ int requestUbsLogReset(unsigned int conversationHandle) {
 	requestBodyBasePart[1] = getBigEndianWord(0);								 // something that must be always zero
 	requestBodyBasePart[2] = getBigEndianWord(11);								 // word, describing the number of bytes of the rest of the message 
 	requestBodyBasePart[3] = getBigEndianWord((255 << 8) | 0x10);				 // Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
-	requestBodyBasePart[4] = getBigEndianWord(MB_LOG_DATA_ADDR);				 // The word defining the start address of the log data
+	requestBodyBasePart[4] = getBigEndianWord(MB_LOG_INFO_ADDR);				 // The word defining the start address of the log data
 	requestBodyBasePart[5] = getBigEndianWord(2);							     // Word defining the number of words to write
 	
 	// Copy the data to a bytes array
