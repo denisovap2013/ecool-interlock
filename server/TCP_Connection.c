@@ -108,7 +108,7 @@ int tcpConnection_ServerCallback(unsigned handle, int xType, int errCode, void *
 		case TCP_DATAREADY:
 			if (tcpSI->dataExchangeFunc)
 			{
-				tcpSI->dataExchangeFunc(handle,0);	
+				tcpSI->dataExchangeFunc(handle, buf);	
 			}
 			break;
 	}

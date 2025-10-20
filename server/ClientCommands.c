@@ -233,7 +233,11 @@ void logNotification(char *ip, char *message, ...) {
 	vsprintf(buf, message, arglist);
 	va_end(arglist);
 
-	msAddMsg(msGMS(),"%s [CLIENT] [IP: %s] %s", TimeStamp(0), ip, buf);
+	if (ip != NULL) {
+		msAddMsg(msGMS(),"%s [CLIENT] [IP: %s] %s", TimeStamp(0), ip, buf);
+	} else {
+		msAddMsg(msGMS(),"%s [CLIENT] [IP: unspecified] %s", TimeStamp(0), buf);  	
+	}
 
 }
 
