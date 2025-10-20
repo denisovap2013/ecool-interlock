@@ -90,10 +90,26 @@ void RemoveFilesFromDir(const char *dirName, const char *prefix, int expirationD
 }
 
 
+void AppendStringToAFileHandler(const char *data, FILE * outputFile) {
+
+	int res;
+	
+	if (outputFile == NULL) {
+	    printf("%s [RUNTIME] Unable to write to the file using the provided handler. The handler is NULL.\n", TimeStamp(0));  
+		return;
+	}
+	
+	if ((res = fprintf(outputFile, data)) < 0) {
+	    printf("%s [RUNTIME] Unable to write to the file using the provided handler. The error code is %d.\n", TimeStamp(0), res);	
+	}
+}
+
+
 void AppendStringToAFile(const char *data, const char *directory, const char *prefix) {
 	static char fileName[512];
 	static int day,month,year;
 	FILE * outputFile;
+	int res;
 	
 	GetSystemDate(&month, &day, &year);
 	setOrCreateRelDirectory(directory);
@@ -101,14 +117,18 @@ void AppendStringToAFile(const char *data, const char *directory, const char *pr
 	outputFile = fopen(fileName, "a");
 
 	if (outputFile != NULL) {
-		fprintf(outputFile, data);
+		if ((res = fprintf(outputFile, data)) < 0) {
+		    printf("%s [RUNTIME] Unable to write to the file \"%s\". The error code is %d.\n", TimeStamp(0), fileName, res);	
+		}
 		fclose(outputFile);
 
 	} else {
 		// TODO: maybe inform about errors	
-		printf("%s [RUNTIME] Unable to open the file for writing: \"%s\"", TimeStamp(0), fileName);
+		printf("%s [RUNTIME] Unable to open the file for writing: \"%s\"\n", TimeStamp(0), fileName);
 	}	
 }
+
+
 //==============================================================================
 // Global variables
 
