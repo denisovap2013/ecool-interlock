@@ -81,11 +81,36 @@ void clearGlobalRequestsQueue(void) {
 
 int appendGlobalRequestQueueRecord(int requestID, const char * requestBody, int (*flags)[5]) {
 	int j;
+    #ifdef __VERBOSE__ 
+	char requestBodyClean[1024];
+	int bodyLen;
+	#endif
 	
-	if (globalRequestsQueue.num == MAX_REQUESTS_QUEUE_LENGTH) return 0;
+	
+	#ifdef __VERBOSE__
+	    strcpy(requestBodyClean, requestBody);
+		if ((bodyLen = strlen(requestBodyClean)) > 0) requestBodyClean[bodyLen - 1] = 0; 
+	    logMessage("[VERBOSE] Adding a global request to the queue: \"%s\"", requestBodyClean);
+    #endif
+	if (globalRequestsQueue.num == MAX_REQUESTS_QUEUE_LENGTH) {
+        #ifdef __VERBOSE__
+		    strcpy(requestBodyClean, requestBody);
+		    if ((bodyLen = strlen(requestBodyClean)) > 0) requestBodyClean[bodyLen - 1] = 0;    
+		    logMessage("[VERBOSE] The global requests queue is full, unable to add more requests: \"%s\"", requestBodyClean);
+        #endif
+		return 0;
+	}
 	
 	// If request with the same ID and flags already exists we do not add new request 
-	if (hasSameGlobalRequestsRecord(requestID, flags)) return 0; 
+	if (hasSameGlobalRequestsRecord(requestID, flags)) {
+		#ifdef __VERBOSE__
+		    strcpy(requestBodyClean, requestBody);
+		    if ((bodyLen = strlen(requestBodyClean)) > 0) requestBodyClean[bodyLen - 1] = 0;    
+		    logMessage("[VERBOSE] The global requests queue already has a command with the body \"%s\" and flags [%d, %d, %d, %d, %d].",
+				requestBodyClean, flags[0], flags[1], flags[2], flags[3], flags[4]);
+        #endif
+		return 0;
+	}
 	
 	j = (globalRequestsQueue.currentPos + globalRequestsQueue.num) % MAX_REQUESTS_QUEUE_LENGTH;
 	globalRequestsQueue.num++;
