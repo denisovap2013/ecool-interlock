@@ -200,6 +200,10 @@ int processUserCommand(char *userCmd, char *answerBuffer, char *ip) {
 	if (parser) {
 		result = parser(userCmd + cursor, parserAnswer, ip);
 		
+		#ifdef __VERBOSE__
+		    logNotification(ip, "[VERBOSE] Processing a command: \"%s\".", userCmd);    
+		#endif
+		
 		// Check for errors
 		if (result < 0) {
 			logNotification(ip, "[ERROR] Incorrect command data: \"%s\". %s", userCmd, parserAnswer);
