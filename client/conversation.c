@@ -75,7 +75,8 @@ const requests_queue_record_t * popGlobalRequestQueueRecord(void) {
 
 
 void clearGlobalRequestsQueue(void) {
-	memset(&globalRequestsQueue, 0, sizeof(globalRequestsQueue));	
+	memset(&globalRequestsQueue, 0, sizeof(globalRequestsQueue));
+	memset(&globalRequestState, 0, sizeof(globalRequestState));
 }
 
 
