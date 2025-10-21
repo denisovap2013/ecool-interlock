@@ -77,6 +77,9 @@ const requests_queue_record_t * popGlobalRequestQueueRecord(void) {
 void clearGlobalRequestsQueue(void) {
 	memset(&globalRequestsQueue, 0, sizeof(globalRequestsQueue));
 	memset(&globalRequestState, 0, sizeof(globalRequestState));
+	#ifdef __VERBOSE__
+	logMessage("[VERBOSE]: Clearing the global requests queue and the global request state.");	
+    #endif
 }
 
 
@@ -107,8 +110,12 @@ int appendGlobalRequestQueueRecord(int requestID, const char * requestBody, int 
 		#ifdef __VERBOSE__
 		    strcpy(requestBodyClean, requestBody);
 		    if ((bodyLen = strlen(requestBodyClean)) > 0) requestBodyClean[bodyLen - 1] = 0;    
-		    logMessage("[VERBOSE] The global requests queue already has a command with the body \"%s\" and flags [%d, %d, %d, %d, %d].",
-				requestBodyClean, flags[0], flags[1], flags[2], flags[3], flags[4]);
+			if (flags == NULL) {
+			    logMessage("[VERBOSE] The global requests queue already has a command with the body \"%s\".", requestBodyClean);	
+			} else {
+		        logMessage("[VERBOSE] The global requests queue already has a command with the body \"%s\" and flags [%d, %d, %d, %d, %d].",
+				    requestBodyClean, (*flags)[0], (*flags)[1], (*flags)[2], (*flags)[3], (*flags)[4]);
+			}
         #endif
 		return 0;
 	}
@@ -130,6 +137,7 @@ int appendGlobalRequestQueueRecord(int requestID, const char * requestBody, int 
 int sendRequestIfAvailable(int serverHandle) {
 	const requests_queue_record_t *pRequestRecord;
 	const char *command;
+	char commandClear[1024];
 	
 	// Check if other request is being processed
 	if (globalRequestState.waiting) {
@@ -150,9 +158,18 @@ int sendRequestIfAvailable(int serverHandle) {
 	command = pRequestRecord->requestBody;
 	
 	if (ClientTCPWrite(serverHandle, command, strlen(command), 10) < 0) {
-		logMessage("Error! Unable to send the following command to the Interlock server: %s.\n", command);
+		strcpy(commandClear, command);
+		commandClear[strlen(command)-1] = 0;
+		logMessage("Error! Unable to send the following command to the Interlock server: \"%s\".", commandClear);
 		return 0;
 	}
+    #ifdef __VERBOSE__
+	else {
+		strcpy(commandClear, command);
+		commandClear[strlen(command)-1] = 0;
+	    logMessage("[VERBOSE]: Sent command to server: \"%s\".", commandClear);	
+	}
+    #endif
 	
 	// If data is sent successfully, set the @waiting@ flag
 	globalRequestState.waiting = 1;
