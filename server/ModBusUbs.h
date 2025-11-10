@@ -161,7 +161,7 @@ void FormatAllDiData(const unsigned int *pDiData, char *outputBuffer);
 void FormatAllDqData(const unsigned short *pDqData, char *outputBuffer);
 void FormatDiagnosticsData(const ubs_processed_data_t *processedData, char *outputBuffer);
 void FormatLogPageData(const ubs_log_page_t *logPageData, char *outputBuffer);		  
-int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, char *outputBuffer);
+int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, time_t targetCurrentTimeStamp, char *outputBuffer);
 
 
 #ifdef __cplusplus

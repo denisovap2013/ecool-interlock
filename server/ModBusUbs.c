@@ -776,7 +776,7 @@ void SaveEventsData(ubs_log_info_t * ubsLogInfo) {
 }
 
 
-int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, char *outputBuffer) {
+int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, time_t targetCurrentTimeStamp, char *outputBuffer) {
 	#define MAX_RECORDS 40
 	char eventsRecords[MAX_RECORDS + 1][256];	
 	int recordsFound, tooManyRecords;
@@ -784,9 +784,16 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, char *outputBuf
 	int i, j;
 	char *stringPos, textBuffer[256];
 	time_t eventTimeStamp;
+	time_t hostTimeStamp;
+	time_t timeStampOffset;
 
-	// ReadEventsFiles(const char *eventsDirectory, time_t startTimeStamp, time_t endTimeStamp, char **outputBuffer, int recordsMaxNumber, int *recordsFound) 
-	ReadEventsFiles(CFG_FILE_EVENTS_DIRECTORY, startTimeStamp, endTimeStamp, eventsRecords, MAX_RECORDS + 1, &recordsFound);
+	// Get the different between the host timestamp and the target time stamp to adjust the time values to the target
+	// and to adjust the time boundaries for the events search.
+	time(&hostTimeStamp);
+	timeStampOffset = targetCurrentTimeStamp - hostTimeStamp;
+	
+	// Reading the events files
+	ReadEventsFiles(CFG_FILE_EVENTS_DIRECTORY, startTimeStamp + timeStampOffset, endTimeStamp + timeStampOffset, eventsRecords, MAX_RECORDS + 1, &recordsFound);
 	
 	if (recordsFound > MAX_RECORDS) {
 		tooManyRecords = 1;
@@ -833,7 +840,7 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, char *outputBuf
 		}
 		
 		// Format extracted data
-		sprintf(textBuffer, " %u%s", eventTimeStamp, eventsRecords[i] + dataPos);
+		sprintf(textBuffer, " %u%s", eventTimeStamp - timeStampOffset, eventsRecords[i] + dataPos);
 		strcat(outputBuffer, textBuffer);
 	}
 	
