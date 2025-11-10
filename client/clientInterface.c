@@ -900,7 +900,7 @@ int  CVICALLBACK requestEvents(int panel, int control, int event, void *callback
 	switch (event)
 	{
 		case EVENT_COMMIT:
-			sprintf(command, "%s %u %u\n", CMD_GET_EVENTS, getFromTimeStamp(), getToTimeStamp());
+			sprintf(command, "%s %u %u %u\n", CMD_GET_EVENTS, getFromTimeStamp(), getToTimeStamp(), time(0));
 			appendGlobalRequestQueueRecord(CMD_GET_EVENTS_ID, command, NULL);
 			break;
 	}
