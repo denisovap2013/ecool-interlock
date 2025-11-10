@@ -400,6 +400,8 @@ int cmdParserGetConnectinState(char *commandBody, char *answerBuffer, char *ip) 
 int cmdParserGetEvents(char *commandBody, char *answerBuffer, char *ip) {
 	time_t startTimeStamp, endTimeStamp;
 
+	logMessage("Requested events with the folowing time interval: '%s'", commandBody);
+	
 	if (sscanf(commandBody, "%u %u", &startTimeStamp, &endTimeStamp) != 2) {
 		sprintf(answerBuffer, "Unable to get the timestamps from the request. Expected 'startTimeStamp (s)' 'endTimeStamp (s)'.");
 		return -1;
