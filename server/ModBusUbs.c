@@ -446,8 +446,14 @@ ubs_log_page_t parseLogPageData(unsigned char * byteArray) {
 	pageData.ubsBlockTime.seconds      = byteArray[7] & 0x3f; 
 	pageData.ubsBlockTime.milliseconds = byteArray[6] * 4 + byteArray[7] / 64;
 	
+	// Get the type of the record
+	// 0 - restart, all other bytes in the log page are expected to be zero
+	// 1 - change in input / output blocks
+	pageData.entryType = byteArray[9] + (byteArray[8] << 8);
+	
+	
 	// Retrieving the data for DI and DQ blocks
-	shift = 8;
+	shift = 10;
 
 	// Reading DI
 	for (i=0; i<DI_NUMBER; i++) {
@@ -462,6 +468,10 @@ ubs_log_page_t parseLogPageData(unsigned char * byteArray) {
 		pageData.DQ[i] = getWordFromBigEndian(bigEndianWordValue);
 		shift += 2;
 	}
+	
+	// Reading diagnostics data
+	memcpy(&bigEndianWordValue, byteArray + shift, 2);
+	pageData.diagnostics = bigEndianWordValue;	
 	
 	return pageData;
 }
@@ -510,7 +520,7 @@ void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * 
 	requestBody[3] = getBigEndianWord((255 << 8) | 3);				 	// Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
 	
 	// The word defining the start address of the log page with regard to the start address of the log data..
-	requestBody[4] = getBigEndianWord(MB_LOG_DATA_ADDR + 4 + logInfo->currentPageIndex * logInfo->logState.pageSize);					
+	requestBody[4] = getBigEndianWord(MB_LOG_DATA_ADDR + logInfo->currentPageIndex * logInfo->logState.pageSize);
 	
 	requestBody[5] = getBigEndianWord(logInfo->logState.pageSize);	 			// Word defining the number of words to read from the UBS module
 	
@@ -749,12 +759,20 @@ void FormatLogPageData(const ubs_log_page_t *logPageData, char *outputBuffer) {
 	formatLogTimeInfo(logPageData->ubsBlockTime, outputBuffer + strlen(outputBuffer));
 	strcat(outputBuffer, " ");
 	
+	// Insert entry type
+	sprintf(outputBuffer + strlen(outputBuffer), "%04X ", logPageData->entryType);
+	
 	// Insert DI info
 	FormatAllDiData(logPageData->DI, outputBuffer + strlen(outputBuffer));
 	strcat(outputBuffer, " ");
 	
 	// Insert DQ info
 	FormatAllDqData(logPageData->DQ, outputBuffer + strlen(outputBuffer));
+	strcat(outputBuffer, " ");
+	
+	// Insert diagnostics info
+	sprintf(outputBuffer + strlen(outputBuffer), "%04X", logPageData->diagnostics);   
+	
 }
 
 
@@ -823,6 +841,15 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, time_t targetCu
 		stringPos = eventsRecords[i] + dataPos;
 		
 		// Check that the rest of the record contains the necessary data
+		
+		// Check record type info
+		if (sscanf(stringPos, "%X%n", &intBuff, &auxPos) != 1) {
+			logMessage("[EVENTS]: Error! Unable to parse the events record (missing entry type info): \"%s\"", eventsRecords[i]);  
+			return 0;		
+		}
+		stringPos += auxPos;
+		
+		// Check DI info
 		for (j=0; j<DI_NUMBER; j++) {
 			if (sscanf(stringPos, "%X%n", &intBuff, &auxPos) != 1) {
 				logMessage("[EVENTS]: Error! Unable to parse the events record (missing state of DI-%d): \"%s\"", j, eventsRecords[i]);  
@@ -831,6 +858,7 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, time_t targetCu
 			stringPos += auxPos;
 		}
 		
+		// Check DQ info
 		for (j=0; j<DQ_NUMBER; j++) {
 			if (sscanf(stringPos, "%X%n", &intBuff, &auxPos) != 1) {
 				logMessage("[EVENTS]: Error! Unable to parse the events record (missing state of DQ-%d): \"%s\"", j, eventsRecords[i]);  
@@ -838,6 +866,14 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, time_t targetCu
 			}
 			stringPos += auxPos;
 		}
+		
+		// Check diagnostics info
+		if (sscanf(stringPos, "%X%n", &intBuff, &auxPos) != 1) {
+			logMessage("[EVENTS]: Error! Unable to parse the events record (missing diagnostics info): \"%s\"", eventsRecords[i]);  
+			return 0;		
+		}
+		stringPos += auxPos;
+		
 		
 		// Format extracted data
 		sprintf(textBuffer, " %u%s", eventTimeStamp - timeStampOffset, eventsRecords[i] + dataPos);

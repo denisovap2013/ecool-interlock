@@ -87,8 +87,10 @@ typedef struct ubs_log_page {
 	unsigned int hostTimeStamp;
 	time_info_t hostTime;
 	time_info_t ubsBlockTime;
+	unsigned int entryType;
 	unsigned int DI[DI_NUMBER];
 	unsigned short DQ[DQ_NUMBER];
+	unsigned short diagnostics;
 } ubs_log_page_t;
 
 
