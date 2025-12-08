@@ -749,7 +749,7 @@ void FormatDiagnosticsData(const ubs_processed_data_t *processedData, char *outp
 
 
 void FormatLogPageData(const ubs_log_page_t *logPageData, char *outputBuffer) {
-	sprintf(outputBuffer, "%10u ", logPageData->hostTimeStamp);
+	sprintf(outputBuffer, "%10u %10u ", logPageData->hostTimeStamp, logPageData->deviceTimeStamp);
 	
 	// Writing host time info
 	formatLogTimeInfo(logPageData->hostTime, outputBuffer + strlen(outputBuffer));
@@ -802,6 +802,7 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, time_t targetCu
 	int i, j;
 	char *stringPos, textBuffer[256];
 	time_t eventTimeStamp;
+	time_t deviceTimeStamp;
 	time_t hostTimeStamp;
 	time_t timeStampOffset;
 
@@ -826,8 +827,8 @@ int FormatEventsData(time_t startTimeStamp, time_t endTimeStamp, time_t targetCu
 		// Reading the eventTimeStamp and skipping the rest of time info
 		scanRes = sscanf(
 			eventsRecords[i],
-			"%u %d %d %d %d %d %d %d %d %d %d %d %d %d %d%n",
-			&eventTimeStamp,
+			"%u %u %d %d %d %d %d %d %d %d %d %d %d %d %d %d%n",
+			&eventTimeStamp, &deviceTimeStamp,
 			&intBuff, &intBuff, &intBuff, &intBuff, &intBuff, &intBuff, &intBuff,  // Skip 7 values of the server local time 
 			&intBuff, &intBuff, &intBuff, &intBuff, &intBuff, &intBuff, &intBuff,  // Skip 7 values of the UBS block local time
 			&dataPos
