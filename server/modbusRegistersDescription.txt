@@ -1,0 +1,250 @@
+///////
+#define		dAdrDI		0	
+#define		dAdrDQ		4	
+#define		dAdrOper	7	
+#define		dAdrDiag	12	
+#define		dAdrAdc		13	
+#define		dAdrDac		77
+#define		dAdrDLinfo	81	
+
+#define		dAdrPfb1	87	
+#define		dAdrPfb2	107	
+#define		dAdrPfb3	127	
+#define		dAdrPfb4	147	
+#define		dAdrTimeR	167	
+#define		dAdrTimeW	171	
+///////
+
+IP- 192.168.1.23 port 502
+
+???? ModBus ?? ????? Cooler.
+
+??? 		(???)
+
+ 0  - 3		(4)  : ???            	- ????   (Function code - 3 - ???? Holding register )
+ 4  - 6		(3)  : ???? 	- ????          -//-
+ 7  - 11	(5)  : ????         	- ????/???
+12		(1)  : ??????      	- ????          -//-
+13  - 76	(64) : ADC              	- ????          -//-
+77  - 80	(4)  : DAC              	- ???   (Function code - 0x10 - ??? ?????? ?????)
+81  - 86	(6)  : ????? ??-???     - ????
+//
+87-166		(80) : Profibus (?? ??)
+//
+167 - 170	(4)  : ??? ??		- ????
+171 - 174	(4)  : ??? ??		- ???
+
+//////////////////////////////// ??? ????
+1-? ???: ???? ?? - ??
+	   ???? ?? - ???
+
+2-? ???: ??
+
+3-? ???: ???? ?? - ???
+	   ???? ?? - ???
+
+4-? ???: ???? 10 ?? - ??????
+	   ???? 6  ?? - ????
+
+////////////////////////////////
+??????: ???-12
+??? ?? ??????? ??? ??? (? ?? -> ? ???, ? PLC)
+ '0' - Ok! '1' - Error
+??
+ 0-1 - DI
+ 2-4 - DQ
+ 5-8 - ADC
+ 9   - DAC
+ 10  - ??? Profibus
+
+////////////////////////////////
+
+
+
+
+
+//////////////////////////////// ????? ????
+??? ?? ???? ????
+??? chbSa[] - ?? char
+void CCoolerView::RdAdcPLC1()					// chitaem ves' massiv dannyh (87 slov)
+{
+	int l;
+
+//	uchFcode1 = 4;						//Function code (4 - chtenie registrov vvoda)
+	uchFcode1 = 3;						//Function code (3 - chtenie Holding register )
+	chbSa[0] = 1;
+	chbSa[1] = 2;
+	chbSa[2] = 0;
+	chbSa[3] = 0;
+	chbSa[4] = 0;						//dlina st. bajt
+	chbSa[5] = 6;						//dlina ml. bajt (kolichestvo bajt, kotorye pojdut dalee)
+	chbSa[6] = (char)255;					//Unit Identifier
+	chbSa[7] = uchFcode1;					//Function code 
+
+	chbSa[8] = 0;						//adres st. bajt (nachalo massiva dannyh)
+	chbSa[9] = (char)dAdrDI;				//adres ml. bajt
+	chbSa[10] = 0;						//kol.(slova) st. bajt
+	chbSa[11] = 87;						//kol.(slova) ml. bajt  chitaem ves' massiv
+
+	l = m_pSocket.Send(chbSa, 12);				//peresylaem
+
+	if (l == SOCKET_ERROR) { sprintf_s(chbSa, "Send Err(rd ADC) (PLC1)"); Wrscrmes(1); }
+	
+	flError1 = 2;						//zhdem dannye
+	SetTimer(3, 100, NULL);					//tajmer ozhidanija otveta
+}
+
+
+----------------------------
+?????? ADC
+
+???? ?? ? ???? - ?. ?? ??? ?. ?? 
+
+void Analog::AdcResult1()					// ????? ??? ??? ????
+{
+	int i;
+	for (i = 0; i<32; i++) BufToRes1(i);			// ??? 32 ??? ??
+}
+
+void Analog::BufToRes1(int ch)					// ADC -> 
+{
+	short shType;
+	short shRes;
+
+// dannye nachinajutsa c nomera 9 (nomer v bufere prinjatyh dannyh)
+// kanaly ADC nachinajutsja s nomera dAdrAdc(=13), 4 bajta na kanal
+// t.e. ADC nachinajutsja s nomera 9 + dAdrAdc * 2 (nomer v bufere prinjatyh dannyh)
+
+	shType = (unsigned char)chbRx[9 + dAdrAdc * 2 + ch * 4] * 256 + (unsigned char)chbRx[10 + dAdrAdc * 2 + ch * 4];	// pervye 2 bajta tip kanala
+	shRes = (unsigned char)chbRx[11 + dAdrAdc * 2 + ch * 4] * 256 + (unsigned char)chbRx[12 + dAdrAdc * 2 + ch * 4];	// vtorye 2 bajta znachenie ADC
+//
+	if (shType == 0) return;										//kanal ne zadejstvovan (numeracija iz PLC, obychno dlja termorezistorov)
+	shbAdc1[ch] = shRes;
+	ADCres(0, shType, shRes, ch);									//ostal'nye kanaly ADC
+}
+
+/////
+static unsigned int uibAdcType[10] = { 0, 50, 80, 250, 500, 1000, 0, 2500, 5000, 10000 };	// bufer diapazonov ADC (v mV)
+
+double Analog::ADCres(short shType, short shRes, int ch)
+{
+	double dfRes;
+	unsigned int uiDiap;
+	//
+	if (shType > 9) shType = 9;								// na vsjakij sluchaj
+	if (shType < 0) shType = 0;								// na vsjakij sluchaj
+
+	uiDiap = uibAdcType[shType];								// diapazon ADC v mV 
+	dfRes = (double)shRes * uiDiap / 27648;							// rezultat v mV 
+	dfRes *= 10;										// vyvodim s desjatoj mV
+
+	lbUplc1[ch] = (long)(dfRes + 0.5);						//
+	return(dfRes);
+}
+
+////////////////////////////////////////////////////////////////////
+void CCoolerDView::SendTime()	// ??? ???? ? ??
+{
+	int i;
+	unsigned short ushVol;
+
+	GetLocalTime(&tmy);
+	uchFcode1 = 0x10;												// Function code (0x10 - zapis' neskol'kih registrov)
+	chbTx[0] = 0;													// st. bajt
+	chbTx[1] = 1;													// ml. bajt sudja po vsemu kakoj-to schetchik (server vyshlet obratno)
+	chbTx[2] = 0;
+	chbTx[3] = 0;
+
+	chbTx[4] = 0;													// dlina st. bajt
+	chbTx[5] = 15;													// dlina ml. bajt
+	chbTx[6] = (char)255;											// v PLC takoj Unit Identifier
+	chbTx[7] = uchFcode1;											// Function code (16 - zapis' Holding register)
+
+	chbTx[8] = 0;													// adres st. bajt 
+	chbTx[9] = (char)dAdrTimeW;										// adres ml. bajt (4 slova vremja PLC)
+	chbTx[10] = 0;													// kol. registrov st. bajt
+	chbTx[11] = 4;													// kol. registrov ml. bajt
+	chbTx[12] = 8;													// kol. bajt (kotorye pojdut sledom) (otvoditsja 1 bajt)
+	chbTx[13] = (char)tmy.wDay;										// znachenie registra st. bajt
+	chbTx[14] = (char)tmy.wMonth;									// znachenie registra ml. bajt
+	chbTx[15] = (char)(tmy.wYear / 256);							// znachenie registra st. bajt
+	chbTx[16] = (char)(tmy.wYear % 256);							// znachenie registra ml. bajt
+	chbTx[17] = (char)tmy.wHour;									// znachenie registra st. bajt
+	chbTx[18] = (char)tmy.wMinute;									// znachenie registra ml. bajt
+
+	ushVol = (unsigned short)tmy.wMilliseconds;
+	ushVol = ushVol * 64 + ((unsigned short)tmy.wSecond & 0x3f);
+	chbTx[19] = (char)(ushVol / 256);								// znachenie registra st. bajt
+	chbTx[20] = (char)(ushVol % 256);								// znachenie registra ml. bajt
+
+	i = m_pSocket.Send(chbTx, 21);									// peresylaem
+
+	if(i == SOCKET_ERROR) sprintf(chbSa,"Send Time Err");
+	else                  sprintf(chbSa,"Time len(tx) - %u", i); 
+	Wrscrmes(1);
+/////
+//	Stcmd.SendTimeCmd();
+//	sprintf(chbSa,"Time - %u %u %u %u %u %u %x %x", chbTx[13], chbTx[14], chbTx[15], (unsigned char)chbTx[16]
+//		                                          , chbTx[17], chbTx[18], (unsigned char)chbTx[19], (unsigned char)chbTx[20]); 
+//	Wrscrmes(1);
+}
+////////////////
+void CCoolerDView::RdTime()	// ???? ???? ? ??
+{
+	int l;
+
+//	uchFcode1 = 4;													//Function code (4 - chtenie registrov vvoda)
+	uchFcode1 = 3;													//Function code (3 - chtenie Holding register )
+	chbSa[0] = 1;
+	chbSa[1] = 2;
+	chbSa[2] = 0;
+	chbSa[3] = 0;
+	chbSa[4] = 0;													//dlina st. bajt
+	chbSa[5] = 6;													//dlina ml. bajt
+	chbSa[6] = (char)255;											//Unit Identifier
+	chbSa[7] = uchFcode1;											//Function code 
+
+	chbSa[8] = 0;													//adres st. bajt (zapros vremeni PLC)
+	chbSa[9] = (char)dAdrTimeR;										//adres ml. bajt
+	chbSa[10] = 0;													//kol.(slova) st. bajt
+	chbSa[11] = 4;													//kol.(slova) ml. bajt  chitaem ves' massiv
+
+	l = m_pSocket.Send(chbSa, 12);									//peresylaem
+
+	if (l == SOCKET_ERROR) { sprintf(chbSa, "Send Err(rd ADC) (PLC1)"); Wrscrmes(1); }
+	
+	flError1 = 2;													//zhdem dannye
+	SetTimer(3, 500, NULL);											//tajmer ozhidanija otveta
+
+	uchFcode1 = 8;													//Function code (menjaem dlja otlichija ot dannyh ADC)
+}
+
+void CCoolerDView::TimeRes()	// ???? ?????? ???? ? ?? ? ????
+{
+	unsigned char uchDay, uchMonth;
+	unsigned char uchHour, uchMinute;
+	unsigned short ushYear;
+	unsigned short tmp1;
+	unsigned short ushSec, ushMiliSec;
+
+// poskol'ku byl otdel'nyj zapros, to dannye Time PLC nachinajutsja s nomera 9
+	uchDay = chbRx[9];
+	uchMonth = chbRx[10];
+
+	ShtoCh.B.chB1 = chbRx[11];										//st. bajt
+	ShtoCh.B.chB0 = chbRx[12];										//ml. bajt
+	ushYear = ShtoCh.shRes;
+
+	uchHour = chbRx[13];
+	uchMinute = chbRx[14];
+
+	ShtoCh.B.chB1 = chbRx[15];										//st. bajt
+	ShtoCh.B.chB0 = chbRx[16];										//ml. bajt
+	tmp1 = ShtoCh.shRes;
+
+	ushSec = tmp1 & 0x3f;											// ml. 6 bit sekundy
+	ushMiliSec = tmp1 / 64;											// st. 10 bit milisekundy
+
+	sprintf(chbSa, "PLC: Date-%02u.%02u.%u  Time-%02u:%02u:%02u.%003u", uchDay, uchMonth, ushYear, uchHour, uchMinute, ushSec, ushMiliSec);
+	Wrscrmes(1);
+}
