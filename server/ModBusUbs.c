@@ -196,12 +196,13 @@ int SetLogReadingStatus(ubs_log_info_t * ubsLogInfo) {
 	ubsLogInfo->currentlyReading = 1;	
 	ubsLogInfo->currentPageIndex = 0;
 	
-	if (ubsLogInfo->logState.startAddress) {
+	if (ubsLogInfo->logState.hasCycle) {
 		ubsLogInfo->numberOfPagesToRead = MAX_LOG_PAGES_NUM;	
 	} else {
-		ubsLogInfo->numberOfPagesToRead = ubsLogInfo->logState.endAddress / ubsLogInfo->logState.pageSize;	
+		ubsLogInfo->numberOfPagesToRead = (ubsLogInfo->logState.endAddress - ubsLogInfo->logState.startAddress) / ubsLogInfo->logState.pageSize;	
 	}
 	
+	logMessage("[MODBUS-UBS] States of the registry blocks changed. start address %d, end address %d.", ubsLogInfo->logState.startAddress, ubsLogInfo->logState.endAddress);
 	logMessage("[MODBUS-UBS] States of the registry blocks changed. %d page(s) are available.", ubsLogInfo->numberOfPagesToRead);
 	
 	return 1;
@@ -282,7 +283,9 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 							if (pModbusBlockData->logInfo.currentPageIndex >= pModbusBlockData->logInfo.numberOfPagesToRead) {
 								SaveEventsData(&pModbusBlockData->logInfo);
 								ResetLogReadingStatus(&pModbusBlockData->logInfo); 
-								requestUbsLogReset(handle);
+								// Reset the event log state and set the start address to the register next to the endAddress.
+								// Also take into account, that the buffer has a limited size and the start address can move to the 0-th register. 
+								requestUbsLogReset(handle, pModbusBlockData->logInfo.logState.endAddress);
 							} else {
 								requestUbsLogPages(handle, &pModbusBlockData->logInfo);		
 							}
@@ -407,6 +410,9 @@ ubs_log_state_t parseUbsLogInfo(unsigned char * byteArray) {
 	logState.pagesAddress = getWordFromBigEndian(*(unsigned short*)(byteArray + 8)); 
 	logState.startAddressForAlignment = getWordFromBigEndian(*(unsigned short*)(byteArray + 10));
 	
+	logState.hasCycle = logState.startAddress & (1 << 15);
+	logState.startAddress = logState.startAddress & ((1 << 15) - 1);  // Remove leading bit from the start address.
+	
 	// Check that the current size and address of log pages match the specification
 	// for which the log-decoding was implemented.
 	logState.pageSize_valid = logState.pageSize == MB_LOG_PAGE_SIZE;
@@ -530,30 +536,18 @@ void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * 
 }
 
 
-int requestUbsLogReset(unsigned int conversationHandle) {
+int requestUbsLogReset(unsigned int conversationHandle, unsigned int newStartAddress) {
 	// Returns 0 if failed, 1 if succeeded
-	unsigned short requestBodyBasePart[6];
-	unsigned char requestBody[17];
+	unsigned short requestBody[6];
 
 	
-	requestBodyBasePart[0] = getBigEndianWord(TRANSACTION_CODE_UBS_RESET_LOG);	 // transaction ID 
-	requestBodyBasePart[1] = getBigEndianWord(0);								 // something that must be always zero
-	requestBodyBasePart[2] = getBigEndianWord(11);								 // word, describing the number of bytes of the rest of the message 
-	requestBodyBasePart[3] = getBigEndianWord((255 << 8) | 0x10);				 // Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
-	requestBodyBasePart[4] = getBigEndianWord(MB_LOG_INFO_ADDR);				 // The word defining the start address of the log data
-	requestBodyBasePart[5] = getBigEndianWord(2);							     // Word defining the number of words to write
-	
-	// Copy the data to a bytes array
-	memcpy(requestBody, requestBodyBasePart, sizeof(requestBodyBasePart));
-	
-	requestBody[12] = 4;									 // number of bytes in the tail of the message
-	
-	// The following bytes will be ignored (but necessary to meet the requirements of the ModBus protocol)
-	requestBody[13] = 0;
-	requestBody[14] = 0;
-	requestBody[15] = 0;
-	requestBody[16] = 0;
-	
+	requestBody[0] = getBigEndianWord(TRANSACTION_CODE_UBS_RESET_LOG);	 // transaction ID 
+	requestBody[1] = getBigEndianWord(0);								 // something that must be always zero
+	requestBody[2] = getBigEndianWord(6);								 // word, describing the number of bytes of the rest of the message 
+	requestBody[3] = getBigEndianWord((255 << 8) | 0x06);				 // Unit identifier (seems like it is predefined and equal to 255) and Function code (0x06 - write single register)
+	requestBody[4] = getBigEndianWord(MB_LOG_INFO_ADDR + 5);			 // The word defining the start address of the log data
+	requestBody[5] = getBigEndianWord(newStartAddress*MB_LOG_PAGE_SIZE); // Word to write
+
 	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) < 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the log reset command to the UBS module: %s", GetTCPSystemErrorString());
 		return 0;

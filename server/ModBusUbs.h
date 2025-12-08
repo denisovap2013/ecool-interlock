@@ -85,6 +85,7 @@ typedef struct time_info {
 typedef struct ubs_log_page {
 	int err;
 	unsigned int hostTimeStamp;
+	unsigned int deviceTimeStamp;
 	time_info_t hostTime;
 	time_info_t ubsBlockTime;
 	unsigned int entryType;
@@ -103,6 +104,7 @@ typedef struct ubs_log_state {
 	unsigned short startAddressForAlignment;
 	unsigned short pageSize_valid;
 	unsigned short pagesAddress_valid;
+	unsigned short hasCycle;
 } ubs_log_state_t;
 
 
@@ -144,7 +146,7 @@ int ModbusUbsClientCallback(unsigned handle, int xType, int errCode, void * call
 void requestUbsData(unsigned int conversationHandle);
 void requestLogInfo(unsigned int conversationHandle);
 void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * logInfo);
-int requestUbsLogReset(unsigned int conversationHandle);
+int requestUbsLogReset(unsigned int conversationHandle, unsigned int newStartAddress);
 int writeUbsDAC(unsigned int conversationHandle, unsigned int dacIndex, unsigned int dacChannelIndex, double dacChannelVoltage);
 
 ubs_processed_data_t parseUbsData(unsigned char * byteArray);
