@@ -538,17 +538,23 @@ void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * 
 
 int requestUbsLogReset(unsigned int conversationHandle, unsigned int newStartAddress) {
 	// Returns 0 if failed, 1 if succeeded
-	unsigned short requestBody[6];
+	unsigned short requestBody[7];
+	unsigned char requestBytes[15];
 
 	
 	requestBody[0] = getBigEndianWord(TRANSACTION_CODE_UBS_RESET_LOG);	 // transaction ID 
 	requestBody[1] = getBigEndianWord(0);								 // something that must be always zero
-	requestBody[2] = getBigEndianWord(6);								 // word, describing the number of bytes of the rest of the message 
-	requestBody[3] = getBigEndianWord((255 << 8) | 0x06);				 // Unit identifier (seems like it is predefined and equal to 255) and Function code (0x06 - write single register)
+	requestBody[2] = getBigEndianWord(9);								 // word, describing the number of bytes of the rest of the message 
+	requestBody[3] = getBigEndianWord((255 << 8) | 0x10);				 // Unit identifier (seems like it is predefined and equal to 255) and Function code (0x10 - write multiple registers)
 	requestBody[4] = getBigEndianWord(MB_LOG_INFO_ADDR + 5);			 // The word defining the start address of the log data
-	requestBody[5] = getBigEndianWord(newStartAddress*MB_LOG_PAGE_SIZE); // Word to write
+	requestBody[5] = getBigEndianWord(1);
 
-	if (ClientTCPWrite(conversationHandle, requestBody, sizeof(requestBody), CFG_UBS_CONNECTION_SEND_TIMEOUT) < 0) {
+	memcpy(requestBytes, requestBody, 6*2);
+	requestBytes[12] = 2;
+	requestBytes[13] = 0;
+	requestBytes[14] = MB_LOG_PAGE_SIZE * newStartAddress;
+	
+	if (ClientTCPWrite(conversationHandle, requestBytes, sizeof(requestBytes), CFG_UBS_CONNECTION_SEND_TIMEOUT) < 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the log reset command to the UBS module: %s", GetTCPSystemErrorString());
 		return 0;
 	}
