@@ -35,6 +35,7 @@
 #define MB_LOG_DATA_ADDR 300
 // Each log page occupies 13 words
 #define MB_LOG_PAGE_SIZE 13
+#define MB_LOG_MAX_SIZE 2500
 #define MB_LOG_DATA_MAX_ADDR 32499
 		
 //==============================================================================
@@ -117,7 +118,7 @@ typedef struct ubs_log_info {
 	int numberOfPagesToRead;
 	
 	// Data
-	ubs_log_page_t logDataPages[100];
+	ubs_log_page_t logDataPages[MB_LOG_MAX_SIZE];
 } ubs_log_info_t;
 
 

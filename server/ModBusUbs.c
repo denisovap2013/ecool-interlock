@@ -22,7 +22,6 @@
 //==============================================================================
 // Constants
 #define DEFAULT_DAC_RANGE_TYPE 9
-#define MAX_LOG_PAGES_NUM 100
 
 const unsigned short TRANSACTION_CODE_UBS_READ_ALL = 0xAAF0;
 const unsigned short TRANSACTION_CODE_UBS_SET_DAC = 0xCC3C;
@@ -190,14 +189,14 @@ int SetLogReadingStatus(ubs_log_info_t * ubsLogInfo) {
 		logMessage("[CODE] Trying to initiate log pages reading for a second time.");
 		return 0;
 	}
-
-	if (!ubsLogInfo->logState.startAddress && !ubsLogInfo->logState.endAddress) return 0;
+	
+	if (ubsLogInfo->logState.startAddress == ubsLogInfo->logState.endAddress) return 0;
 	
 	ubsLogInfo->currentlyReading = 1;	
 	ubsLogInfo->currentPageIndex = 0;
 	
 	if (ubsLogInfo->logState.hasCycle) {
-		ubsLogInfo->numberOfPagesToRead = MAX_LOG_PAGES_NUM;	
+		ubsLogInfo->numberOfPagesToRead = MB_LOG_MAX_SIZE;	
 	} else {
 		ubsLogInfo->numberOfPagesToRead = (ubsLogInfo->logState.endAddress - ubsLogInfo->logState.startAddress) / ubsLogInfo->logState.pageSize;	
 	}
@@ -526,7 +525,7 @@ void requestUbsLogPages(unsigned int conversationHandle, const ubs_log_info_t * 
 	requestBody[3] = getBigEndianWord((255 << 8) | 3);				 	// Unit identifier (seems like it is predefined and equal to 255) and Function code (3 - read)
 	
 	// The word defining the start address of the log page with regard to the start address of the log data..
-	requestBody[4] = getBigEndianWord(MB_LOG_DATA_ADDR + logInfo->currentPageIndex * logInfo->logState.pageSize);
+	requestBody[4] = getBigEndianWord(MB_LOG_DATA_ADDR + (logInfo->logState.startAddress + logInfo->currentPageIndex * logInfo->logState.pageSize) % (MB_LOG_MAX_SIZE * logInfo->logState.pageSize));
 	
 	requestBody[5] = getBigEndianWord(logInfo->logState.pageSize);	 			// Word defining the number of words to read from the UBS module
 	
@@ -551,15 +550,15 @@ int requestUbsLogReset(unsigned int conversationHandle, unsigned int newStartAdd
 
 	memcpy(requestBytes, requestBody, 6*2);
 	requestBytes[12] = 2;
-	requestBytes[13] = 0;
-	requestBytes[14] = MB_LOG_PAGE_SIZE * newStartAddress;
+	requestBytes[13] = (newStartAddress >> 8) & 0xFF;
+	requestBytes[14] = newStartAddress & 0xFF;
 	
 	if (ClientTCPWrite(conversationHandle, requestBytes, sizeof(requestBytes), CFG_UBS_CONNECTION_SEND_TIMEOUT) < 0) {
 		logMessage("[MODBUS-UBS]: Error! Unable to send the log reset command to the UBS module: %s", GetTCPSystemErrorString());
 		return 0;
 	}
 	
-	logMessage("[MODBUS-UBS] Sent the request to reset the log state.");
+	logMessage("[MODBUS-UBS] Sent the request to reset the log state. Set the start address to %d.", newStartAddress);
 	
 	return 1;
 }
